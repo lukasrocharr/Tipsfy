@@ -1,0 +1,10 @@
+{
+  "description": "Centralize subscription management, automate member access, and track performance metrics for sports betting tip groups with a clean, responsive dashboard.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
