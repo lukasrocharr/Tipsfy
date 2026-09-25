@@ -27,6 +27,8 @@ export interface Plan {
   active: boolean
   subscribers: number
   description?: string
+  channelId: string
+  checkoutSlug: string
 }
 
 export interface Tip {
@@ -80,9 +82,9 @@ export const subscribers: Subscriber[] = [
 
 // TEMPORÁRIO: mock ainda em uso, será substituído na Etapa 2.
 export const plans: Plan[] = [
-  { id: '1', name: 'VIP Mensal', price: 39.90, period: 'monthly', active: true, subscribers: 7, description: 'Acesso ao grupo VIP com sinais diários.' },
-  { id: '2', name: 'Premium Trimestral', price: 99.90, period: 'quarterly', active: true, subscribers: 3, description: 'Plano trimestral com 16% de desconto.' },
-  { id: '3', name: 'VIP Anual', price: 399.90, period: 'annual', active: true, subscribers: 1, description: 'Melhor custo-benefício, 33% de desconto.' },
+  { id: '1', name: 'VIP Mensal', price: 39.90, period: 'monthly', active: true, subscribers: 7, description: 'Acesso ao grupo VIP com sinais diários.', channelId: 'mock-channel', checkoutSlug: 'vip-mensal-demo' },
+  { id: '2', name: 'Premium Trimestral', price: 99.90, period: 'quarterly', active: true, subscribers: 3, description: 'Plano trimestral com 16% de desconto.', channelId: 'mock-channel', checkoutSlug: 'premium-trimestral-demo' },
+  { id: '3', name: 'VIP Anual', price: 399.90, period: 'annual', active: true, subscribers: 1, description: 'Melhor custo-benefício, 33% de desconto.', channelId: 'mock-channel', checkoutSlug: 'vip-anual-demo' },
 ]
 
 // TEMPORÁRIO: mock ainda em uso, será substituído na Etapa 3.

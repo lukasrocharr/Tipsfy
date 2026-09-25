@@ -5,7 +5,7 @@
  */
 export type PlanTier = 'STARTER' | 'PRO'
 
-export type TipsterPublic = Omit<Tipster, 'passwordHash'>
+export type TipsterPublic = Omit<Tipster, 'passwordHash' | 'withoutPassword'>
 
 export class Tipster {
   constructor(

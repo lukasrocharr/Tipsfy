@@ -1,6 +1,6 @@
-import { useState } from 'react'
 'use client'
 
+import { useState } from 'react'
 import { transactions, mrrHistory, type Transaction } from '../data'
 import { TxBadge, Card, SectionHeader } from '../components/ui'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'

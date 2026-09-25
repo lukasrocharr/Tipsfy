@@ -6,6 +6,7 @@ import type { Tipster } from '../../domain/entities/Tipster'
 
 export interface TipsterRepository {
   salvar(tipster: Tipster): Promise<void>
+  buscarPorId(id: string): Promise<Tipster | null>
   buscarPorEmail(email: string): Promise<Tipster | null>
   existeEmail(email: string): Promise<boolean>
 }

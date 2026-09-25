@@ -12,6 +12,12 @@ enum PlanTier {
   PRO
 }
 
+enum PlanPeriod {
+  monthly
+  quarterly
+  annual
+}
+
 model Tipster {
   id           String   @id
   email        String   @unique
@@ -20,6 +26,40 @@ model Tipster {
   trialEndsAt  DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  channels     Channel[]
 
   @@map("tipsters")
+}
+
+model Channel {
+  id             String   @id
+  tipsterId      String
+  telegramChatId String
+  botTokenEnc    String
+  name           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tipster        Tipster  @relation(fields: [tipsterId], references: [id], onDelete: Cascade)
+  plans          Plan[]
+
+  @@index([tipsterId])
+  @@map("channels")
+}
+
+model Plan {
+  id           String     @id
+  channelId    String
+  name         String
+  price        Decimal    @db.Decimal(10, 2)
+  period       PlanPeriod
+  active       Boolean    @default(true)
+  description  String?
+  subscribers  Int        @default(0)
+  checkoutSlug String     @unique
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  channel      Channel    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@map("plans")
 }

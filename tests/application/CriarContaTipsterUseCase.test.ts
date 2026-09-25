@@ -11,6 +11,10 @@ class TipsterRepositoryFake implements TipsterRepository {
     this.tipsters.push(tipster)
   }
 
+  async buscarPorId(id: string): Promise<Tipster | null> {
+    return this.tipsters.find(tipster => tipster.id === id) ?? null
+  }
+
   async buscarPorEmail(email: string): Promise<Tipster | null> {
     return this.tipsters.find(tipster => tipster.email === email) ?? null
   }

@@ -20,6 +20,11 @@ export class PrismaTipsterRepository implements TipsterRepository {
     return record ? this.toDomain(record) : null
   }
 
+  async buscarPorId(id: string): Promise<Tipster | null> {
+    const record = await prisma.tipster.findUnique({ where: { id } })
+    return record ? this.toDomain(record) : null
+  }
+
   async existeEmail(email: string): Promise<boolean> {
     const count = await prisma.tipster.count({ where: { email } })
     return count > 0

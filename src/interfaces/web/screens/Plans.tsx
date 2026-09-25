@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { plans as defaultPlans, type Plan, type PlanPeriod } from '../data'
+import type { Plan, PlanPeriod } from '../data'
 import { Card, Btn, Input, SectionHeader } from '../components/ui'
+import { usePlans } from '../hooks/usePlans'
 
 const PERIOD_LABEL: Record<PlanPeriod, string> = { monthly: 'Mensal', quarterly: 'Trimestral', annual: 'Anual' }
 const PERIOD_BADGE: Record<PlanPeriod, string> = { monthly: '', quarterly: '16% off', annual: '33% off' }
@@ -79,18 +80,21 @@ function CheckoutPreview({ plan }: { plan: Partial<Plan> }) {
 }
 
 export default function Plans() {
-  const [plans, setPlans] = useState<Plan[]>(defaultPlans)
+  // Antes: useState inicializado com plans de data.ts. Agora: usePlans busca e persiste pela API,
+  // mantendo o mesmo formato Plan para preservar o JSX aprovado da tela.
+  const { plans, criarPlano, editarPlano, removerPlano, error } = usePlans()
   const [form, setForm] = useState<Partial<Plan>>({ period: 'monthly', active: true })
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
 
-  function save() {
+  async function save() {
     if (!form.name || !form.price) return
+    const planInput = { name: form.name, price: form.price, period: form.period ?? 'monthly', active: form.active ?? true, description: form.description }
     if (editingId) {
-      setPlans(p => p.map(pl => pl.id === editingId ? { ...pl, ...form as Plan } : pl))
+      await editarPlano(editingId, planInput)
       setEditingId(null)
     } else {
-      setPlans(p => [...p, { id: Date.now().toString(), subscribers: 0, active: true, ...form } as Plan])
+      await criarPlano(planInput)
     }
     setForm({ period: 'monthly', active: true })
   }
@@ -101,12 +105,12 @@ export default function Plans() {
   }
 
   function removePlan(id: string) {
-    setPlans(p => p.filter(pl => pl.id !== id))
+    void removerPlano(id)
   }
 
-  function copyLink(id: string) {
-    navigator.clipboard.writeText(`https://tipsfy.io/checkout/${id}`).catch(() => {})
-    setCopiedId(id)
+  function copyLink(plan: Plan) {
+    navigator.clipboard.writeText(`${window.location.origin}/checkout/${plan.checkoutSlug}`).catch(() => {})
+    setCopiedId(plan.id)
     setTimeout(() => setCopiedId(null), 2000)
   }
 
@@ -184,7 +188,7 @@ export default function Plans() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <button onClick={() => copyLink(plan.id)} className={`text-xs px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${copiedId === plan.id ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-800/40' : 'bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400'}`}>
+                        <button onClick={() => copyLink(plan)} className={`text-xs px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${copiedId === plan.id ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-800/40' : 'bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400'}`}>
                           {copiedId === plan.id ? '✓ Copiado' : <>
                             <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M4 2h6v6M2 4h6v6H2z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             Link
@@ -206,6 +210,7 @@ export default function Plans() {
           <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3">Preview do Checkout</p>
           <CheckoutPreview plan={form} />
           <p className="text-xs text-zinc-700 text-center mt-3">Esta é a página que seus assinantes verão ao clicar no link.</p>
+          {error && <p className="text-xs text-red-400 text-center mt-3" role="alert">{error}</p>}
         </div>
       </div>
     </div>
