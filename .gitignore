@@ -20,3 +20,7 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+
+.vercel
+.env*
+!.env.example

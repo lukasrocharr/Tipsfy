@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/internal/run-subscription-check",
-      "schedule": "*/15 * * * *"
-    }
-  ]
-}
+{}
