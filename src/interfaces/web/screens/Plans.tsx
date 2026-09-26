@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { Plan, PlanPeriod } from '../data'
 import { Card, Btn, Input, SectionHeader } from '../components/ui'
 import { usePlans } from '../hooks/usePlans'
+import { Check, CircleCheck, Copy, Pencil, Trash2 } from 'lucide-react'
 
 const PERIOD_LABEL: Record<PlanPeriod, string> = { monthly: 'Mensal', quarterly: 'Trimestral', annual: 'Anual' }
 const PERIOD_BADGE: Record<PlanPeriod, string> = { monthly: '', quarterly: '16% off', annual: '33% off' }
@@ -50,7 +51,7 @@ function CheckoutPreview({ plan }: { plan: Partial<Plan> }) {
       <div className="space-y-2 mb-5">
         {['Acesso imediato ao grupo VIP', 'Sinais em tempo real via Telegram', 'Histórico de performance verificado', 'Suporte direto com o tipster'].map(f => (
           <div key={f} className="flex items-center gap-2.5 text-xs text-zinc-400">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#065f46"/><path d="M4.5 7L6.5 9L9.5 5" stroke="#10b981" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <CircleCheck size={14} className="text-emerald-400" />
             {f}
           </div>
         ))}
@@ -189,13 +190,13 @@ export default function Plans() {
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button onClick={() => copyLink(plan)} className={`text-xs px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${copiedId === plan.id ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-800/40' : 'bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400'}`}>
-                          {copiedId === plan.id ? '✓ Copiado' : <>
-                            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M4 2h6v6M2 4h6v6H2z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          {copiedId === plan.id ? <><Check size={14} className="text-current" />Copiado</> : <>
+                            <Copy size={14} className="text-current" />
                             Link
                           </>}
                         </button>
-                        <button onClick={() => startEdit(plan)} className="text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 px-2.5 py-1.5 rounded-lg transition-colors">Editar</button>
-                        <button onClick={() => removePlan(plan.id)} className="text-xs bg-red-950/40 hover:bg-red-950/60 text-red-500 px-2.5 py-1.5 rounded-lg transition-colors">✕</button>
+                        <button onClick={() => startEdit(plan)} className="text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"><Pencil size={14} className="text-current" />Editar</button>
+                        <button onClick={() => removePlan(plan.id)} aria-label="Excluir plano" className="text-xs bg-red-950/40 hover:bg-red-950/60 text-red-500 px-2.5 py-1.5 rounded-lg transition-colors"><Trash2 size={14} className="text-current" /></button>
                       </div>
                     </div>
                   </Card>

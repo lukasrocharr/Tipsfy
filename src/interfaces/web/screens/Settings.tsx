@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Card, Btn, Input, SectionHeader } from '../components/ui'
 import { useConnectBot } from '../hooks/useConnectBot'
 import { useSettings } from '../hooks/useSettings'
+import { CircleAlert, CircleCheck, Download, Trash2 } from 'lucide-react'
 
 function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
@@ -176,8 +177,8 @@ export default function Settings() {
                   <div className={`flex items-center gap-4 p-4 rounded-xl border ${connected ? 'bg-emerald-950/20 border-emerald-800/30' : 'bg-red-950/20 border-red-900/30'}`}>
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${connected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-950/50 text-red-400'}`}>
                       {connected
-                        ? <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        : <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                        ? <CircleCheck size={18} className="text-current" />
+                        : <CircleAlert size={18} className="text-current" />
                       }
                     </div>
                     <div>
@@ -371,14 +372,14 @@ export default function Settings() {
                       <p className="text-sm text-zinc-300 group-hover:text-zinc-100 transition-colors">Exportar todos os dados</p>
                       <p className="text-xs text-zinc-600">Baixar CSV com assinantes, tips e transações</p>
                     </div>
-                    <svg className="text-zinc-600" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <Download size={16} className="text-zinc-600" />
                   </button>
                   <button onClick={() => void handleDeleteAccount()} disabled={saving} className="w-full flex items-center justify-between px-4 py-3 bg-red-950/20 hover:bg-red-950/30 rounded-lg transition-colors text-left border border-red-900/30 disabled:opacity-50">
                     <div>
                       <p className="text-sm text-red-400">Encerrar conta</p>
                       <p className="text-xs text-zinc-600">Soft delete: cancela acesso, mantém auditoria e permite recuperação posterior.</p>
                     </div>
-                    <svg className="text-red-800" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                    <Trash2 size={16} className="text-red-800" />
                   </button>
                 </div>
               </Card>

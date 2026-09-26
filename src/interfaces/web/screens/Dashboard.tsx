@@ -7,6 +7,7 @@ import { calcROI } from '../data'
 import { useDashboardSummary } from '../hooks/useDashboardSummary'
 import { useNotifications } from '../hooks/useNotifications'
 import { MetricCard, Badge, Avatar, Card } from '../components/ui'
+import { Bell, ChevronRight } from 'lucide-react'
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload?.length) {
@@ -53,7 +54,7 @@ export default function Dashboard() {
           {/* Notifications */}
           <div className="relative">
             <button onClick={() => setNotifOpen(!notifOpen)} className="relative w-9 h-9 rounded-lg bg-[#18181c] border border-[#1e1e24] flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-all">
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+              <Bell size={16} className="text-current" />
               {unread > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] text-white font-bold flex items-center justify-center">{unread}</span>}
             </button>
             {notifOpen && (
@@ -213,7 +214,7 @@ export default function Dashboard() {
                 <button key={a.screen} onClick={() => router.push(`/${a.screen}`)} className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg hover:bg-[#18181c]/60 transition-colors group text-left">
                   <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${a.color}`}>{a.icon}</span>
                   <span className="text-sm text-zinc-400 group-hover:text-zinc-200 transition-colors">{a.label}</span>
-                  <svg className="ml-auto text-zinc-700 group-hover:text-zinc-500 transition-colors" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  <ChevronRight size={16} className="ml-auto text-zinc-700 group-hover:text-zinc-500 transition-colors" />
                 </button>
               ))}
             </div>

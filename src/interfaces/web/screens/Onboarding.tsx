@@ -6,14 +6,15 @@ import { signIn } from 'next-auth/react'
 import { Btn, Input } from '../components/ui'
 import { AuthRequestError, useAuth } from '../hooks/useAuth'
 import { useConnectBot } from '../hooks/useConnectBot'
+import { Check, Circle, CircleAlert, CircleCheck, Hexagon, LoaderCircle } from 'lucide-react'
 
 const Logo = () => (
   <div className="flex items-center gap-2.5">
     <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M9 2.5L14.5 5.75V12.25L9 15.5L3.5 12.25V5.75L9 2.5Z" stroke="white" strokeWidth="1.5" fill="none"/>
-        <circle cx="9" cy="9" r="2.5" fill="white"/>
-      </svg>
+      <span className="relative flex items-center justify-center text-white">
+        <Hexagon size={18} strokeWidth={1.5} />
+        <Circle size={5} fill="currentColor" className="absolute" />
+      </span>
     </div>
     <span className="text-xl font-bold text-zinc-100 tracking-tight">Tipsfy</span>
   </div>
@@ -98,7 +99,7 @@ export default function Onboarding() {
                   'bg-transparent border-zinc-800 text-zinc-600'
                 }`}>
                   {i < step ? (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <Check size={12} className="text-current" />
                   ) : s.num}
                 </div>
                 <span className={`text-xs font-medium transition-colors ${i === step ? 'text-zinc-300' : 'text-zinc-600'}`}>{s.label}</span>
@@ -170,7 +171,7 @@ export default function Onboarding() {
                 {connected && (
                   <div className="flex items-center gap-3 bg-emerald-950/40 border border-emerald-800/50 rounded-xl px-4 py-3">
                     <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <Check size={12} className="text-current" />
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-emerald-400">Bot conectado com sucesso!</p>
@@ -186,7 +187,7 @@ export default function Onboarding() {
                     ? <Btn className="flex-1" onClick={() => setStep(2)}>Continuar →</Btn>
                     : <Btn className="flex-1" disabled={!form.botToken || !form.channelId || connecting} onClick={handleConnect}>
                         {connecting ? (
-                          <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/></svg>Verificando...</>
+                          <><LoaderCircle size={16} className="animate-spin text-current" />Verificando...</>
                         ) : 'Verificar Conexão'}
                       </Btn>
                   }
@@ -200,7 +201,7 @@ export default function Onboarding() {
             <div className="p-8">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-800/40 flex items-center justify-center mx-auto mb-4">
-                  <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#10b981" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <CircleCheck size={24} className="text-emerald-400" />
                 </div>
                 <h2 className="text-xl font-bold text-zinc-100">Tudo pronto!</h2>
                 <p className="text-sm text-zinc-500 mt-1">Sua conta está configurada e o bot está online.</p>
@@ -215,8 +216,8 @@ export default function Onboarding() {
                   <div key={i} className="flex items-center gap-3 bg-zinc-900/40 rounded-lg px-4 py-3">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${item.ok ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
                       {item.ok
-                        ? <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4 7L8 3" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        : <span className="text-amber-400 text-[10px] font-bold">!</span>
+                        ? <Check size={12} className="text-emerald-400" />
+                        : <CircleAlert size={12} className="text-amber-400" />
                       }
                     </div>
                     <span className={`text-xs ${item.ok ? 'text-zinc-300' : 'text-zinc-500'}`}>{item.label}</span>

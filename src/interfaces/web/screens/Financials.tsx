@@ -5,6 +5,7 @@ import { mrrHistory, type Transaction } from '../data'
 import { TxBadge, Card, SectionHeader } from '../components/ui'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { useTransactions } from '../hooks/useTransactions'
+import { CreditCard, Download } from 'lucide-react'
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload?.length) {
@@ -51,7 +52,7 @@ export default function Financials() {
         sub="Acompanhe receitas, pagamentos e solicitações de saque."
         action={
           <button className="bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-4 py-2.5 rounded-lg transition-colors text-sm flex items-center gap-2">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            <CreditCard size={16} className="text-current" />
             Solicitar Saque
           </button>
         }
@@ -155,7 +156,7 @@ export default function Financials() {
         <div className="flex items-center justify-between px-5 py-3 border-t border-[#1e1e24] bg-zinc-900/20">
           <span className="text-xs text-zinc-600">{filtered.length} transações</span>
           <button className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5">
-            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <Download size={16} className="text-current" />
             Exportar CSV
           </button>
         </div>

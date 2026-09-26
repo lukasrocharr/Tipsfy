@@ -6,6 +6,7 @@ import { type Tip, type TipResult, calcROI } from '../data'
 import { ResultBadge, Card, Btn, EmptyState, SectionHeader } from '../components/ui'
 import { useBestOdds } from '../hooks/useBestOdds'
 import { useTips } from '../hooks/useTips'
+import { ChartColumnIncreasing, MessageCircle, X } from 'lucide-react'
 
 const SPORTS = ['Futebol', 'Tênis', 'Basquete', 'Vôlei', 'MMA', 'Outros']
 const BOOKMAKERS = ['Bet365', 'Betano', 'Sportingbet', 'Pixbet', 'KTO', 'Outra']
@@ -92,7 +93,7 @@ function TipModal({ tip, onClose, onSave, channels, currentChannelId }: {
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-bold text-zinc-100">{tip?.id ? 'Editar Tip' : 'Registrar Nova Tip'}</h2>
           <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 transition-colors">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 4L14 14M14 4L4 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <X size={18} className="text-current" />
           </button>
         </div>
         <div className="space-y-4">
@@ -475,7 +476,7 @@ export default function Tips() {
 
         {filtered.length === 0 ? (
           <EmptyState
-            icon={<svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>}
+            icon={<ChartColumnIncreasing size={24} className="text-current" />}
             title="Nenhuma tip encontrada"
             sub="Registre sua primeira tip para começar a construir seu histórico de performance."
           />
@@ -521,7 +522,7 @@ export default function Tips() {
                       <tr key={`${tip.id}-notes`} className="border-b border-[#1e1e24]/40 bg-zinc-900/20">
                         <td colSpan={8} className="px-4 py-3">
                           <div className="flex items-start gap-2">
-                            <svg className="text-zinc-600 flex-shrink-0 mt-0.5" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+                            <MessageCircle size={16} className="text-zinc-600 flex-shrink-0 mt-0.5" />
                             <p className="text-xs text-zinc-500 italic">{tip.notes}</p>
                           </div>
                         </td>

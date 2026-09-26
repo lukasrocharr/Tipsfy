@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import { usePublicPerformance } from '../hooks/usePublicPerformance'
 import { ResultBadge } from '../components/ui'
 import Link from 'next/link'
+import { Check, TrendingUp } from 'lucide-react'
 
 export default function PublicPage() {
   const params = useParams<{ slug: string }>()
@@ -37,7 +38,7 @@ export default function PublicPage() {
               R
             </div>
             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-[#08080a] flex items-center justify-center">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <Check size={12} className="text-current" />
             </div>
           </div>
           <h1 className="text-4xl font-black text-zinc-100 mb-2 tracking-tight">{data.channelName}</h1>
@@ -78,7 +79,7 @@ export default function PublicPage() {
         {/* Profit highlight */}
         <div className="bg-emerald-950/20 border border-emerald-800/30 rounded-2xl p-5 mb-10 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#10b981" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+            <TrendingUp size={24} className="text-emerald-400" />
           </div>
           <div>
             <p className="text-sm font-semibold text-zinc-100">
