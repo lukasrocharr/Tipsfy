@@ -1,8 +1,25 @@
 'use client'
 
 import { useState } from 'react'
-import { subscribers as allSubs, type Subscriber, type SubscriberStatus } from '../data'
-import { Badge, Avatar, Card, Btn, Input, EmptyState, SectionHeader } from '../components/ui'
+import { Badge, Avatar, Card, Btn, EmptyState, SectionHeader } from '../components/ui'
+import { useSubscribers } from '../hooks/useSubscribers'
+
+export type SubscriberStatus = 'active' | 'delinquent' | 'cancelled' | 'trial'
+
+type Subscriber = {
+  id: string
+  name: string
+  telegram: string
+  telegramId: string
+  email: string
+  plan: string
+  planId: string
+  status: SubscriberStatus
+  nextBilling: string
+  joinedAt: string
+  totalPaid: number
+  paymentMethod: 'pix' | 'credit_card'
+}
 
 const STATUSES: { value: SubscriberStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Todos' },
@@ -12,7 +29,7 @@ const STATUSES: { value: SubscriberStatus | 'all'; label: string }[] = [
   { value: 'cancelled', label: 'Cancelados' },
 ]
 
-function DetailDrawer({ sub, onClose }: { sub: Subscriber; onClose: () => void }) {
+function DetailDrawer({ sub, onClose, onCancel }: { sub: Subscriber; onClose: () => void; onCancel: (id: string) => void }) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -81,7 +98,7 @@ function DetailDrawer({ sub, onClose }: { sub: Subscriber; onClose: () => void }
               <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z"/></svg>
               Editar plano
             </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 bg-red-950/20 hover:bg-red-950/40 rounded-lg transition-colors text-sm text-red-500">
+            <button onClick={() => onCancel(sub.id)} className="w-full flex items-center gap-3 px-4 py-3 bg-red-950/20 hover:bg-red-950/40 rounded-lg transition-colors text-sm text-red-500">
               <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
               Remover assinante
             </button>
@@ -96,7 +113,7 @@ export default function Subscribers() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<SubscriberStatus | 'all'>('all')
   const [selected, setSelected] = useState<Subscriber | null>(null)
-  const [subs] = useState<Subscriber[]>(allSubs)
+  const { subscribers: subs, cancelarAssinatura } = useSubscribers()
 
   const filtered = subs.filter(s => {
     const q = search.toLowerCase()
@@ -198,7 +215,11 @@ export default function Subscribers() {
                         <button onClick={() => setSelected(sub)} className="text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 hover:text-zinc-200 px-2.5 py-1.5 rounded-lg transition-colors">
                           Detalhes
                         </button>
-                        <button className={`text-xs px-2.5 py-1.5 rounded-lg transition-colors ${
+                        <button onClick={() => {
+                          if (sub.status === 'active') {
+                            void cancelarAssinatura(sub.id)
+                          }
+                        }} className={`text-xs px-2.5 py-1.5 rounded-lg transition-colors ${
                           sub.status === 'active'
                             ? 'bg-red-950/40 hover:bg-red-950/60 text-red-500'
                             : 'bg-emerald-950/40 hover:bg-emerald-950/60 text-emerald-400'
@@ -215,7 +236,7 @@ export default function Subscribers() {
         )}
       </Card>
 
-      {selected && <DetailDrawer sub={selected} onClose={() => setSelected(null)} />}
+      {selected && <DetailDrawer sub={selected} onClose={() => setSelected(null)} onCancel={async (id) => { await cancelarAssinatura(id); setSelected(null) }} />}
     </div>
   )
 }

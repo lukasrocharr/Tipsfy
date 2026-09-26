@@ -8,7 +8,8 @@ export class Channel {
     public readonly id: string,
     public readonly tipsterId: string,
     public readonly telegramChatId: string,
-    public readonly botTokenEnc: string,
+    public readonly botTokenEnc: string | null,
     public readonly name: string,
+    public readonly publicSlug?: string | null,
   ) {}
 }

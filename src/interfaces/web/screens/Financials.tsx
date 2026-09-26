@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { transactions, mrrHistory, type Transaction } from '../data'
+import { useMemo, useState } from 'react'
+import { mrrHistory, type Transaction } from '../data'
 import { TxBadge, Card, SectionHeader } from '../components/ui'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { useTransactions } from '../hooks/useTransactions'
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload?.length) {
@@ -19,13 +20,29 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function Financials() {
   const [filter, setFilter] = useState<'all' | 'paid' | 'failed' | 'pending' | 'refunded'>('all')
+  const { transactions, loading, error, refresh } = useTransactions()
 
-  const filtered = transactions.filter(t => filter === 'all' || t.status === filter)
+  const filtered = useMemo(
+    () => transactions.filter(t => filter === 'all' || t.status === filter),
+    [transactions, filter],
+  )
 
   const totalPaid = transactions.filter(t => t.status === 'paid').reduce((s, t) => s + t.amount, 0)
   const totalFailed = transactions.filter(t => t.status === 'failed').reduce((s, t) => s + t.amount, 0)
-  const totalPending = transactions.filter(t => t.status === 'pending').reduce((s, t) => s + t.amount, 0)
-  const currentMRR = mrrHistory[mrrHistory.length - 1].mrr
+  const currentMRR = mrrHistory[mrrHistory.length - 1]?.mrr ?? 0
+
+  if (loading) {
+    return <div className="max-w-6xl mx-auto py-8 px-4 lg:px-6 text-sm text-zinc-400">Carregando transações…</div>
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto py-8 px-4 lg:px-6">
+        <Card className="p-5 text-red-400">{error}</Card>
+        <button onClick={() => void refresh(filter)} className="mt-4 text-sm text-emerald-400">Tentar novamente</button>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 lg:px-6">
@@ -93,7 +110,10 @@ export default function Financials() {
           <p className="text-sm font-semibold text-zinc-100">Histórico de Transações</p>
           <div className="flex gap-1.5 flex-wrap">
             {(['all', 'paid', 'failed', 'pending', 'refunded'] as const).map(s => (
-              <button key={s} onClick={() => setFilter(s)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === s ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-800/50' : 'bg-[#18181c] text-zinc-500 border border-[#1e1e24] hover:text-zinc-300'}`}>
+              <button key={s} onClick={() => {
+                setFilter(s)
+                void refresh(s)
+              }} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === s ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-800/50' : 'bg-[#18181c] text-zinc-500 border border-[#1e1e24] hover:text-zinc-300'}`}>
                 {s === 'all' ? 'Todas' : s === 'paid' ? 'Pagas' : s === 'failed' ? 'Falhas' : s === 'pending' ? 'Pendentes' : 'Reembolsos'}
               </button>
             ))}

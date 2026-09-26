@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import { subscribers, mrrHistory, notifications, calcROI, tips } from '../data'
+import { calcROI } from '../data'
+import { useDashboardSummary } from '../hooks/useDashboardSummary'
+import { useNotifications } from '../hooks/useNotifications'
 import { MetricCard, Badge, Avatar, Card } from '../components/ui'
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -21,18 +23,23 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function Dashboard() {
   const router = useRouter()
   const [notifOpen, setNotifOpen] = useState(false)
+  const summary = useDashboardSummary()
+  const notificationsHook = useNotifications()
 
-  const active = subscribers.filter(s => s.status === 'active').length
-  const delinquent = subscribers.filter(s => s.status === 'delinquent').length
-  const mrr = subscribers.filter(s => s.status === 'active').reduce((sum, s) => {
-    if (s.plan.includes('Mensal')) return sum + 39.90
-    if (s.plan.includes('Trimestral')) return sum + (99.90 / 3)
-    if (s.plan.includes('Anual')) return sum + (399.90 / 12)
-    return sum
-  }, 0)
-  const { roi, winRate } = calcROI(tips)
-  const unread = notifications.filter(n => !n.read).length
-  const recentSubs = subscribers.slice(0, 5)
+  const subscribers = (summary.subscribers ?? []) as Array<{ id: string; name: string; telegram: string; status: string; plan: string; nextBilling: string }>
+  const mrrHistory = summary.mrrHistory
+  const notifications = notificationsHook.notifications.length ? notificationsHook.notifications : summary.notifications
+  const tips = (summary.tips ?? []) as Array<{ id: string; result: 'green' | 'red' | 'void' | 'pending'; odds: number; units: number; date?: string; sport?: string; event?: string; market?: string }>
+  const { roi, winRate } = calcROI(tips as any)
+
+  const active = summary.active
+  const delinquent = summary.delinquent
+  const mrr = summary.mrr
+  const unread = notifications.filter((n: { read: boolean }) => !n.read).length
+  const recentSubs = subscribers.slice(0, 5).map(sub => ({
+    ...sub,
+    status: (sub.status === 'ACTIVE' ? 'active' : sub.status === 'PAST_DUE' || sub.status === 'FAILED' ? 'delinquent' : sub.status === 'CANCELLED' ? 'cancelled' : 'trial') as 'active' | 'delinquent' | 'cancelled' | 'trial',
+  }))
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 lg:px-6">
@@ -56,7 +63,7 @@ export default function Dashboard() {
                   <span className="text-xs text-emerald-400 cursor-pointer hover:text-emerald-300">Marcar todas lidas</span>
                 </div>
                 <div className="max-h-80 overflow-y-auto">
-                  {notifications.map(n => (
+                  {notifications.map((n: { id: string; type: string; title: string; message: string; read: boolean; time: string }) => (
                     <div key={n.id} className={`px-4 py-3.5 border-b border-[#1e1e24]/50 hover:bg-[#18181c]/40 transition-colors flex gap-3 ${!n.read ? 'bg-emerald-950/10' : ''}`}>
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm ${
                         n.type === 'payment' ? 'bg-emerald-950/60 text-emerald-400' :

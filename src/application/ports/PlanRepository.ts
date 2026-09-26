@@ -8,6 +8,7 @@ export interface PlanRepository {
   salvar(plan: Plan): Promise<void>
   atualizar(plan: Plan): Promise<void>
   buscarPorId(id: string): Promise<Plan | null>
+  buscarPorCheckoutSlug(checkoutSlug: string): Promise<Plan | null>
   listarPorChannelId(channelId: string): Promise<Plan[]>
   existeCheckoutSlug(checkoutSlug: string): Promise<boolean>
   remover(id: string): Promise<void>

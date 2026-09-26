@@ -18,15 +18,48 @@ enum PlanPeriod {
   annual
 }
 
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  FAILED
+  CANCELLED
+  PAST_DUE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum PaymentMethod {
+  pix
+  credit_card
+}
+
+enum TipResult {
+  GREEN
+  RED
+  VOID
+  PENDING
+}
+
 model Tipster {
-  id           String   @id
-  email        String   @unique
-  passwordHash String
-  planTier     PlanTier @default(STARTER)
-  trialEndsAt  DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  channels     Channel[]
+  id                     String    @id
+  email                  String    @unique
+  passwordHash           String
+  planTier               PlanTier  @default(STARTER)
+  trialEndsAt            DateTime
+  name                   String    @default("")
+  bio                    String    @default("")
+  website                String    @default("")
+  notificationPreferences Json      @default("{\"newSubscriber\":true,\"payment\":true,\"delinquent\":true,\"tips\":false,\"weekly\":true}")
+  bankDetails            Json?
+  deletedAt              DateTime?
+  deletionReason         String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  channels               Channel[]
 
   @@map("tipsters")
 }
@@ -35,12 +68,15 @@ model Channel {
   id             String   @id
   tipsterId      String
   telegramChatId String
-  botTokenEnc    String
+  botTokenEnc    String?
   name           String
+  publicSlug     String?  @unique
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   tipster        Tipster  @relation(fields: [tipsterId], references: [id], onDelete: Cascade)
   plans          Plan[]
+  subscribers    Subscriber[]
+  tips           Tip[]
 
   @@index([tipsterId])
   @@map("channels")
@@ -59,7 +95,101 @@ model Plan {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   channel      Channel    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  subscriptions Subscription[]
 
   @@index([channelId])
   @@map("plans")
+}
+
+model Subscriber {
+  id               String         @id
+  channelId        String
+  name             String
+  telegram         String?
+  telegramId       String?
+  email            String
+  pendingLinkToken String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  channel          Channel        @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  subscriptions    Subscription[]
+
+  @@unique([channelId, email])
+  @@index([channelId])
+  @@index([pendingLinkToken])
+  @@map("subscribers")
+}
+
+model Subscription {
+  id           String             @id
+  subscriberId String
+  planId       String
+  status       SubscriptionStatus @default(PENDING)
+  dueDate      DateTime
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  subscriber   Subscriber         @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  plan         Plan               @relation(fields: [planId], references: [id], onDelete: Cascade)
+  payments     Payment[]
+
+  @@index([subscriberId])
+  @@index([planId])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id             String        @id
+  subscriptionId String
+  amount         Decimal       @db.Decimal(10, 2)
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  gatewayTxId    String?       @unique
+  pixQrCode      String?
+  checkoutUrl    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@map("payments")
+}
+
+model Tip {
+  id              String     @id
+  channelId       String
+  sport           String
+  event           String
+  market          String
+  odds            Float
+  units           Float
+  result          TipResult  @default(PENDING)
+  date            String
+  potentialReturn  Float?
+  bookmaker       String?
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  channel         Channel    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@map("tips")
+}
+
+model OddsCache {
+  sportKey  String   @id
+  payload   Json
+  updatedAt DateTime @default(now())
+
+  @@map("odds_cache")
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  action         String
+  details        String
+  createdAt      DateTime @default(now())
+
+  @@index([subscriptionId])
+  @@map("audit_logs")
 }

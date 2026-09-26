@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { Btn, Input } from '../components/ui'
 import { AuthRequestError, useAuth } from '../hooks/useAuth'
+import { useConnectBot } from '../hooks/useConnectBot'
 
 const Logo = () => (
   <div className="flex items-center gap-2.5">
@@ -21,6 +22,7 @@ const Logo = () => (
 export default function Onboarding() {
   const router = useRouter()
   const { signUp } = useAuth()
+  const { connectBot, error: botError } = useConnectBot()
   const [step, setStep] = useState(0)
   const [connecting, setConnecting] = useState(false)
   const [connected, setConnected] = useState(false)
@@ -38,7 +40,11 @@ export default function Onboarding() {
 
   function handleConnect() {
     setConnecting(true)
-    setTimeout(() => { setConnecting(false); setConnected(true) }, 1800)
+    // Antes: timeout local simulava a conexão. Agora: useConnectBot chama a Bot API pelo endpoint protegido.
+    void connectBot(form.botToken, form.channelId)
+      .then(() => setConnected(true))
+      .catch(() => setConnected(false))
+      .finally(() => setConnecting(false))
   }
 
   async function handleCreateAccount() {
@@ -47,6 +53,8 @@ export default function Onboarding() {
     try {
       // Antes: avançava para o passo 2 apenas com setStep(1). Agora: cadastra via API e só avança após resposta 201.
       await signUp(form.email, form.password)
+      // O passo 2 precisa de sessão para criar/atualizar o canal; o passo 3 repete o login como confirmação final.
+      await signIn('credentials', { email: form.email, password: form.password, redirect: false })
       setStep(1)
     } catch (error) {
       setAccountError(error instanceof AuthRequestError ? error.message : 'Não foi possível criar a conta.')
@@ -170,6 +178,7 @@ export default function Onboarding() {
                     </div>
                   </div>
                 )}
+                {botError && <p className="text-xs text-red-400" role="alert">{botError}</p>}
 
                 <div className="flex gap-3 pt-1">
                   <Btn variant="secondary" className="flex-1" onClick={() => setStep(0)}>← Voltar</Btn>

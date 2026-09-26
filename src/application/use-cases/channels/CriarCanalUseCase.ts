@@ -8,7 +8,7 @@ import { LimiteDeCanaisExcedidoError } from '../../../domain/errors/LimiteDeCana
 import type { ChannelRepository } from '../../ports/ChannelRepository'
 import type { TipsterRepository } from '../../ports/TipsterRepository'
 
-export type CriarCanalInput = { tipsterId: string; telegramChatId: string; botTokenEnc: string; name: string }
+export type CriarCanalInput = { tipsterId: string; telegramChatId: string; botTokenEnc: string | null; name: string }
 
 export class CriarCanalUseCase {
   constructor(

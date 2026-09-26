@@ -6,5 +6,6 @@ export class EmailJaCadastradoError extends Error {
   constructor() {
     super('Já existe uma conta com este e-mail.')
     this.name = 'EmailJaCadastradoError'
+    Object.setPrototypeOf(this, new.target.prototype)
   }
 }

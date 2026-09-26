@@ -40,9 +40,9 @@ export interface Tip {
   units: number
   result: TipResult
   date: string
-  potentialReturn?: number
-  bookmaker?: string
-  notes?: string
+  potentialReturn?: number | null
+  bookmaker?: string | null
+  notes?: string | null
 }
 
 export interface Transaction {
@@ -134,7 +134,7 @@ export const mrrHistory = [
   { month: 'Set', mrr: 452 },
 ]
 
-export function calcROI(tipsList: Tip[]) {
+export function calcROI(tipsList: Array<Pick<Tip, 'result' | 'units' | 'odds'>>) {
   const settled = tipsList.filter(t => t.result !== 'pending' && t.result !== 'void')
   const totalUnits = settled.reduce((s, t) => s + t.units, 0)
   const profit = settled.reduce((s, t) => {

@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Card, Btn, Input, SectionHeader } from '../components/ui'
+import { useConnectBot } from '../hooks/useConnectBot'
+import { useSettings } from '../hooks/useSettings'
 
 function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
@@ -34,13 +36,59 @@ export default function Settings() {
 
   const [profile, setProfile] = useState({ name: 'Rafael Tipster', email: 'rafael@tipsfy.io', bio: 'Análises profissionais para futebol e tênis. +3 anos de histórico verificado.', channel: '@SinaisFutebolVIP', site: 'https://rafaeltipster.com' })
   const [notif, setNotif] = useState({ newSubscriber: true, payment: true, delinquent: true, tips: false, weekly: true })
-  const [connected, setConnected] = useState(true)
-  const [botToken] = useState('1234567890:AAHd_••••••••••••••')
-  const [saved, setSaved] = useState(false)
+  const { connectBot, disconnectBot, connected, chatId, error: botError } = useConnectBot()
+  const { saving, saved, setSaved, saveProfile, saveNotificationPreferences, saveBankDetails, deleteAccount } = useSettings()
+  const [botToken, setBotToken] = useState('')
+  const [publicPageEnabled, setPublicPageEnabled] = useState(false)
+  const [publicLink, setPublicLink] = useState('https://tipsfy.app/p/rafael-tipster')
+  const [botActionLoading, setBotActionLoading] = useState(false)
+  const [bankDetails, setBankDetails] = useState({
+    pixType: 'CPF',
+    pixKey: 'rafael@email.com',
+    bank: 'Nubank',
+    agency: '0001',
+    account: '1234567-8',
+    accountType: 'Corrente',
+    ownerDocument: '000.000.000-00',
+  })
 
-  function save() {
+  async function saveProfileState() {
+    await saveProfile({
+      name: profile.name,
+      email: profile.email,
+      bio: profile.bio,
+      website: profile.site,
+    })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function saveNotificationsState() {
+    await saveNotificationPreferences(notif)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function saveBankState() {
+    await saveBankDetails(bankDetails)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function handleDeleteAccount() {
+    await deleteAccount('Solicitação do usuário via painel')
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function handleBotAction() {
+    setBotActionLoading(true)
+    try {
+      if (connected) await disconnectBot()
+      else await connectBot(botToken, chatId ?? profile.channel)
+    } finally {
+      setBotActionLoading(false)
+    }
   }
 
   const tabs = [
@@ -89,10 +137,31 @@ export default function Settings() {
                   </div>
                   <Input label="Handle do Canal" value={profile.channel} onChange={e => setProfile(p => ({ ...p, channel: e.target.value }))} placeholder="@SeuCanal" />
                   <Input label="Site ou link externo (opcional)" value={profile.site} onChange={e => setProfile(p => ({ ...p, site: e.target.value }))} placeholder="https://..." />
+
+                  <div className="rounded-xl border border-[#1e1e24] bg-[#111114] p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-zinc-200">Página pública</p>
+                        <p className="text-xs text-zinc-600 mt-1">Ative para permitir que seus seguidores vejam seu histórico e performance.</p>
+                      </div>
+                      <Toggle label="" checked={publicPageEnabled} onChange={() => setPublicPageEnabled(v => !v)} />
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-2">
+                      <input readOnly value={publicLink} className="flex-1 bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-xs text-zinc-300 font-mono outline-none" />
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard?.writeText(publicLink)}
+                        className="px-3 py-2.5 text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-300 rounded-lg transition-colors"
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </Section>
               <div className="pt-2 flex items-center gap-3">
-                <Btn onClick={save} className="w-40">
+                <Btn onClick={() => void saveProfileState()} disabled={saving} className="w-40">
                   {saved ? '✓ Salvo!' : 'Salvar Perfil'}
                 </Btn>
                 {saved && <span className="text-xs text-emerald-400">Alterações salvas com sucesso.</span>}
@@ -117,10 +186,11 @@ export default function Settings() {
                       </p>
                       <p className="text-xs text-zinc-600 mt-0.5">Canal: @SinaisFutebolVIP • Último ping: agora</p>
                     </div>
-                    <button onClick={() => setConnected(!connected)} className="ml-auto text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 px-3 py-1.5 rounded-lg transition-colors">
-                      {connected ? 'Desconectar' : 'Reconectar'}
+                    <button onClick={() => void handleBotAction()} disabled={botActionLoading} className="ml-auto text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40">
+                      {botActionLoading ? 'Processando...' : connected ? 'Desconectar' : 'Reconectar'}
                     </button>
                   </div>
+                  {botError && <p className="text-xs text-red-400 mt-3" role="alert">{botError}</p>}
                 </Section>
               </Card>
 
@@ -130,8 +200,8 @@ export default function Settings() {
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-medium text-zinc-400">Token do Bot</label>
                       <div className="flex gap-2">
-                        <input value={botToken} readOnly className="flex-1 bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-sm font-mono text-zinc-500 outline-none" />
-                        <button className="text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 px-3 py-2.5 rounded-lg transition-colors whitespace-nowrap">Alterar</button>
+                        <input value={botToken} onChange={event => setBotToken(event.target.value)} type="password" placeholder="1234567890:AAHd..." className="flex-1 bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-sm font-mono text-zinc-500 outline-none" />
+                        <button onClick={() => void handleBotAction()} disabled={botActionLoading || connected} className="text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 px-3 py-2.5 rounded-lg transition-colors whitespace-nowrap disabled:opacity-40">Reconectar</button>
                       </div>
                     </div>
 
@@ -182,7 +252,7 @@ export default function Settings() {
                 </div>
               </Section>
               <div className="mt-5">
-                <Btn onClick={save} className="w-40">{saved ? '✓ Salvo!' : 'Salvar'}</Btn>
+                <Btn onClick={() => void saveNotificationsState()} disabled={saving} className="w-40">{saved ? '✓ Salvo!' : 'Salvar'}</Btn>
               </div>
             </Card>
           )}
@@ -194,14 +264,14 @@ export default function Settings() {
                   <div className="space-y-4">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-medium text-zinc-400">Tipo de chave</label>
-                      <select className="bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 transition-all appearance-none">
-                        <option>CPF</option>
-                        <option>E-mail</option>
-                        <option>Telefone</option>
-                        <option>Chave aleatória</option>
+                      <select value={bankDetails.pixType} onChange={e => setBankDetails(p => ({ ...p, pixType: e.target.value }))} className="bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 transition-all appearance-none">
+                        <option value="CPF">CPF</option>
+                        <option value="E-mail">E-mail</option>
+                        <option value="Telefone">Telefone</option>
+                        <option value="Chave aleatória">Chave aleatória</option>
                       </select>
                     </div>
-                    <Input label="Chave Pix" placeholder="rafael@email.com" />
+                    <Input label="Chave Pix" value={bankDetails.pixKey} onChange={e => setBankDetails(p => ({ ...p, pixKey: e.target.value }))} placeholder="rafael@email.com" />
                     <div className="bg-emerald-950/20 border border-emerald-800/30 rounded-lg px-4 py-3 text-xs text-zinc-500 leading-relaxed">
                       <span className="text-emerald-400 font-medium">Pix verificado.</span> Os pagamentos via Pix são instantâneos e confirmados automaticamente.
                     </div>
@@ -213,24 +283,24 @@ export default function Settings() {
                 <Section title="Dados Bancários para Saque" sub="Conta para recebimento do saldo acumulado.">
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
-                      <Input label="Banco" placeholder="Nubank" />
-                      <Input label="Agência" placeholder="0001" />
+                      <Input label="Banco" value={bankDetails.bank} onChange={e => setBankDetails(p => ({ ...p, bank: e.target.value }))} placeholder="Nubank" />
+                      <Input label="Agência" value={bankDetails.agency} onChange={e => setBankDetails(p => ({ ...p, agency: e.target.value }))} placeholder="0001" />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <Input label="Conta" placeholder="1234567-8" />
+                      <Input label="Conta" value={bankDetails.account} onChange={e => setBankDetails(p => ({ ...p, account: e.target.value }))} placeholder="1234567-8" />
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-medium text-zinc-400">Tipo</label>
-                        <select className="bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 transition-all appearance-none">
-                          <option>Corrente</option>
-                          <option>Poupança</option>
+                        <select value={bankDetails.accountType} onChange={e => setBankDetails(p => ({ ...p, accountType: e.target.value }))} className="bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 transition-all appearance-none">
+                          <option value="Corrente">Corrente</option>
+                          <option value="Poupança">Poupança</option>
                         </select>
                       </div>
                     </div>
-                    <Input label="CPF/CNPJ do titular" placeholder="000.000.000-00" />
+                    <Input label="CPF/CNPJ do titular" value={bankDetails.ownerDocument} onChange={e => setBankDetails(p => ({ ...p, ownerDocument: e.target.value }))} placeholder="000.000.000-00" />
                   </div>
                 </Section>
                 <div className="mt-5">
-                  <Btn onClick={save} className="w-48">{saved ? '✓ Salvo!' : 'Salvar Dados Bancários'}</Btn>
+                  <Btn onClick={() => void saveBankState()} disabled={saving} className="w-48">{saved ? '✓ Salvo!' : 'Salvar Dados Bancários'}</Btn>
                 </div>
               </Card>
 
@@ -303,10 +373,10 @@ export default function Settings() {
                     </div>
                     <svg className="text-zinc-600" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                   </button>
-                  <button className="w-full flex items-center justify-between px-4 py-3 bg-red-950/20 hover:bg-red-950/30 rounded-lg transition-colors text-left border border-red-900/30">
+                  <button onClick={() => void handleDeleteAccount()} disabled={saving} className="w-full flex items-center justify-between px-4 py-3 bg-red-950/20 hover:bg-red-950/30 rounded-lg transition-colors text-left border border-red-900/30 disabled:opacity-50">
                     <div>
                       <p className="text-sm text-red-400">Encerrar conta</p>
-                      <p className="text-xs text-zinc-600">Deletar permanentemente todos os dados da plataforma</p>
+                      <p className="text-xs text-zinc-600">Soft delete: cancela acesso, mantém auditoria e permite recuperação posterior.</p>
                     </div>
                     <svg className="text-red-800" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
                   </button>

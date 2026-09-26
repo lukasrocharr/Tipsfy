@@ -5,6 +5,24 @@
  */
 export type PlanTier = 'STARTER' | 'PRO'
 
+export type NotificationPreferences = {
+  newSubscriber: boolean
+  payment: boolean
+  delinquent: boolean
+  tips: boolean
+  weekly: boolean
+}
+
+export type BankDetails = {
+  pixType?: string
+  pixKey?: string
+  bank?: string
+  agency?: string
+  account?: string
+  accountType?: string
+  ownerDocument?: string
+}
+
 export type TipsterPublic = Omit<Tipster, 'passwordHash' | 'withoutPassword'>
 
 export class Tipster {
@@ -14,6 +32,19 @@ export class Tipster {
     public readonly passwordHash: string,
     public readonly planTier: PlanTier,
     public readonly trialEndsAt: Date,
+    public readonly name: string = '',
+    public readonly bio: string = '',
+    public readonly website: string = '',
+    public readonly notificationPreferences: NotificationPreferences = {
+      newSubscriber: true,
+      payment: true,
+      delinquent: true,
+      tips: false,
+      weekly: true,
+    },
+    public readonly bankDetails: BankDetails | null = null,
+    public readonly deletedAt: Date | null = null,
+    public readonly deletionReason: string | null = null,
   ) {}
 
   withoutPassword(): TipsterPublic {

@@ -38,7 +38,7 @@ export function usePlans() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       // O vínculo real do Telegram continua mockado até a Etapa 4.
-      body: JSON.stringify({ telegramChatId: 'pending', botTokenEnc: 'pending', name: 'Canal principal' }),
+      body: JSON.stringify({ telegramChatId: 'pending', botTokenEnc: null, name: 'Canal principal' }),
     })
     if (!response.ok) throw new Error('Não foi possível preparar o canal.')
     const body = await response.json() as { channel: Channel }

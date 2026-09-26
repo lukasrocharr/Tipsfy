@@ -1,22 +1,73 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-import { tips as defaultTips, type Tip, type TipResult, calcROI } from '../data'
+import { type Tip, type TipResult, calcROI } from '../data'
 import { ResultBadge, Card, Btn, EmptyState, SectionHeader } from '../components/ui'
+import { useBestOdds } from '../hooks/useBestOdds'
+import { useTips } from '../hooks/useTips'
 
 const SPORTS = ['Futebol', 'Tênis', 'Basquete', 'Vôlei', 'MMA', 'Outros']
 const BOOKMAKERS = ['Bet365', 'Betano', 'Sportingbet', 'Pixbet', 'KTO', 'Outra']
+const ODDS_SPORTS = [
+  { key: 'soccer_brazil_campeonato', label: 'Brasileirão', sport: 'Futebol' },
+  { key: 'soccer_usa_mls', label: 'MLS', sport: 'Futebol' },
+  { key: 'tennis_atp', label: 'Tênis ATP', sport: 'Tênis' },
+  { key: 'basketball_nba', label: 'NBA', sport: 'Basquete' },
+  { key: 'volleyball', label: 'Vôlei', sport: 'Vôlei' },
+  { key: 'mma_mixed_martial_arts', label: 'MMA', sport: 'MMA' },
+]
 
-function TipModal({ tip, onClose, onSave }: {
+function formatOddsEventTime(value?: string) {
+  if (!value) return 'Horário não informado'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Horário não informado'
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+}
+
+function TipModal({ tip, onClose, onSave, channels, currentChannelId }: {
   tip?: Partial<Tip>
   onClose: () => void
-  onSave: (t: Tip) => void
+  onSave: (t: Tip & { broadcastToChannelIds?: string[] }) => void
+  channels?: Array<{ id: string; name: string }>
+  currentChannelId?: string | null
 }) {
   const [form, setForm] = useState<Partial<Tip>>(tip ?? { sport: 'Futebol', result: 'pending', bookmaker: 'Bet365' })
+  const [bestOdds, setBestOdds] = useState<{ price: number; bookmaker: string; selection: string } | null>(null)
+  const [sportKey, setSportKey] = useState<string>('soccer_brazil_campeonato')
+  const [broadcastToChannelIds, setBroadcastToChannelIds] = useState<string[]>([])
+  const { data: suggestedOdds } = useBestOdds(sportKey)
+  const otherChannels = (channels ?? []).filter(channel => channel.id !== currentChannelId)
 
   const f = (k: keyof Tip) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(p => ({ ...p, [k]: e.target.value }))
+
+  useEffect(() => {
+    if (!suggestedOdds.length) {
+      setBestOdds(null)
+      return
+    }
+
+    const chosen = suggestedOdds[0]
+    setBestOdds({
+      price: chosen.price,
+      bookmaker: chosen.bookmaker,
+      selection: chosen.selection,
+    })
+  }, [suggestedOdds])
+
+  useEffect(() => {
+    if (!form.sport) return
+    const mapping: Record<string, string> = {
+      Futebol: 'soccer_brazil_campeonato',
+      Tênis: 'tennis_atp',
+      Basquete: 'basketball_nba',
+      Vôlei: 'volleyball',
+      MMA: 'mma_mixed_martial_arts',
+      Outros: 'soccer_usa_mls',
+    }
+    setSportKey(mapping[form.sport] ?? 'soccer_brazil_campeonato')
+  }, [form.sport])
 
   function save() {
     if (!form.event || !form.odds || !form.units) return
@@ -31,6 +82,7 @@ function TipModal({ tip, onClose, onSave }: {
       date: form.date ?? new Date().toISOString().split('T')[0],
       bookmaker: form.bookmaker,
       notes: form.notes,
+      broadcastToChannelIds,
     })
   }
 
@@ -85,6 +137,23 @@ function TipModal({ tip, onClose, onSave }: {
           </div>
 
           <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-zinc-400">Odd sugerida</label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!bestOdds) return
+                  setForm(p => ({ ...p, odds: bestOdds.price, bookmaker: bestOdds.bookmaker }))
+                }}
+                className="bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2 text-xs text-zinc-200 hover:border-emerald-500/50 transition-colors"
+              >
+                {bestOdds ? `Usar ${bestOdds.price.toFixed(2)} (${bestOdds.bookmaker})` : 'Buscar odd'}
+              </button>
+              <span className="text-[10px] text-zinc-500">Odds informativas fornecidas por terceiros. O Tipsfy não processa apostas.</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-zinc-400">Resultado</label>
             <div className="grid grid-cols-4 gap-2">
               {(['pending', 'green', 'red', 'void'] as TipResult[]).map(r => {
@@ -109,6 +178,27 @@ function TipModal({ tip, onClose, onSave }: {
             <textarea value={form.notes ?? ''} onChange={f('notes')} placeholder="Análise ou contexto da tip..." rows={2} className="bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-emerald-500/50 transition-all resize-none" />
           </div>
 
+          {otherChannels.length > 1 && (
+            <div className="flex flex-col gap-2 rounded-xl border border-[#1e1e24] bg-[#18181c]/70 p-3">
+              <label className="text-xs font-medium text-zinc-400">Enviar também para</label>
+              <div className="flex flex-wrap gap-2">
+                {otherChannels.map(channel => {
+                  const checked = broadcastToChannelIds.includes(channel.id)
+                  return (
+                    <button
+                      key={channel.id}
+                      type="button"
+                      onClick={() => setBroadcastToChannelIds(current => current.includes(channel.id) ? current.filter(id => id !== channel.id) : [...current, channel.id])}
+                      className={`rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${checked ? 'border-emerald-700 bg-emerald-950/30 text-emerald-300' : 'border-[#1e1e24] bg-[#111114] text-zinc-400 hover:text-zinc-200'}`}
+                    >
+                      {channel.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3 pt-1">
             <Btn variant="secondary" className="flex-1" onClick={onClose}>Cancelar</Btn>
             <Btn className="flex-1" onClick={save} disabled={!form.event || !form.odds || !form.units}>
@@ -122,13 +212,29 @@ function TipModal({ tip, onClose, onSave }: {
 }
 
 export default function Tips() {
-  const [tips, setTips] = useState<Tip[]>(defaultTips)
+  const [channelId, setChannelId] = useState<string | null>(null)
+  const [featuredSportKey, setFeaturedSportKey] = useState(ODDS_SPORTS[0].key)
+  const [channels, setChannels] = useState<Array<{ id: string; name: string }>>([])
+  const [broadcastStatus, setBroadcastStatus] = useState<Array<{ channelId: string; channelName?: string; status: 'sent' | 'failed' | 'skipped'; reason?: string }>>([])
+  const { tips, loading, error, createTip, updateResult } = useTips(channelId)
+  const { data: featuredOdds, loading: oddsLoading, error: oddsError, refresh: refreshOdds } = useBestOdds(featuredSportKey)
+  const featuredSport = ODDS_SPORTS.find(sport => sport.key === featuredSportKey) ?? ODDS_SPORTS[0]
   const [modal, setModal] = useState<{ open: boolean; tip?: Partial<Tip> }>({ open: false })
   const [sportFilter, setSportFilter] = useState('Todos')
   const [resultFilter, setResultFilter] = useState<TipResult | 'all'>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const { roi, winRate, profit, wins, losses, settled } = calcROI(tips)
+  useEffect(() => {
+    void (async () => {
+      const response = await fetch('/api/channels')
+      if (!response.ok) return
+      const body = await response.json() as { channels: Array<{ id: string; name: string }> }
+      setChannels(body.channels)
+      setChannelId(body.channels[0]?.id ?? null)
+    })()
+  }, [])
+
+  const { roi, winRate, profit, wins, losses, settled } = calcROI(tips as Tip[])
 
   const sports = ['Todos', ...Array.from(new Set(tips.map(t => t.sport)))]
 
@@ -138,16 +244,27 @@ export default function Tips() {
     return matchSport && matchResult
   })
 
-  function handleSave(t: Tip) {
-    setTips(prev => {
-      const exists = prev.find(x => x.id === t.id)
-      return exists ? prev.map(x => x.id === t.id ? t : x) : [t, ...prev]
+  async function handleSave(t: Tip & { broadcastToChannelIds?: string[] }) {
+    const created = await createTip({
+      id: t.id,
+      sport: t.sport,
+      event: t.event,
+      market: t.market,
+      odds: t.odds,
+      units: t.units,
+      result: t.result,
+      date: t.date,
+      potentialReturn: t.potentialReturn ?? null,
+      bookmaker: t.bookmaker ?? null,
+      notes: t.notes ?? null,
+      broadcastToChannelIds: t.broadcastToChannelIds ?? [],
     })
+    setBroadcastStatus(created.broadcastResults ?? [])
     setModal({ open: false })
   }
 
-  function updateResult(id: string, result: TipResult) {
-    setTips(prev => prev.map(t => t.id === id ? { ...t, result } : t))
+  async function persistResult(id: string, result: TipResult) {
+    await updateResult(id, result)
   }
 
   // Monthly chart data
@@ -157,8 +274,32 @@ export default function Tips() {
     { month: 'Set', profit: profit },
   ]
 
+  if (loading && tips.length === 0) {
+    return <div className="max-w-6xl mx-auto py-8 px-4 lg:px-6 text-sm text-zinc-400">Carregando tips…</div>
+  }
+
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 lg:px-6">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-900/40 bg-red-950/20 px-3 py-2 text-sm text-red-300">{error}</div>
+      )}
+
+      {broadcastStatus.length > 0 && (
+        <div className="mb-4 rounded-xl border border-[#1e1e24] bg-[#111114] p-3 text-sm text-zinc-300">
+          <p className="mb-2 font-medium text-zinc-200">Status do envio em lote</p>
+          <div className="flex flex-wrap gap-2">
+            {broadcastStatus.map(item => (
+              <span
+                key={item.channelId}
+                className={`rounded-full border px-2.5 py-1 text-xs ${item.status === 'sent' ? 'border-emerald-700 bg-emerald-950/30 text-emerald-300' : item.status === 'failed' ? 'border-red-700 bg-red-950/30 text-red-300' : 'border-zinc-700 bg-zinc-800/40 text-zinc-400'}`}
+              >
+                {item.channelName ?? item.channelId}: {item.status === 'sent' ? 'enviado' : item.status === 'failed' ? 'falhou' : 'ignorado'}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <SectionHeader
         title="Tips & Performance"
         sub="Registre suas análises e construa prova social verificada."
@@ -168,6 +309,80 @@ export default function Tips() {
           </Btn>
         }
       />
+
+      <Card className="mb-8 overflow-hidden">
+        <div className="flex flex-col gap-4 border-b border-[#1e1e24] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div>
+            <h2 className="text-base font-semibold text-zinc-100">Melhores odds disponíveis</h2>
+            <p className="mt-1 text-xs text-zinc-500">Maior cotação encontrada por evento entre as plataformas retornadas pela The Odds API.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="featured-odds-sport" className="sr-only">Esporte para consultar odds</label>
+            <select
+              id="featured-odds-sport"
+              value={featuredSportKey}
+              onChange={event => setFeaturedSportKey(event.target.value)}
+              className="min-w-36 rounded-lg border border-[#1e1e24] bg-[#18181c] px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500/50"
+            >
+              {ODDS_SPORTS.map(sport => <option key={sport.key} value={sport.key}>{sport.label}</option>)}
+            </select>
+            <Btn variant="secondary" size="sm" onClick={refreshOdds} disabled={oddsLoading} aria-label="Atualizar odds">
+              {oddsLoading ? 'Atualizando…' : 'Atualizar'}
+            </Btn>
+          </div>
+        </div>
+
+        {oddsError ? (
+          <div role="alert" className="p-5 text-sm text-amber-300">
+            <p className="font-medium">Odds ao vivo indisponíveis</p>
+            <p className="mt-1 text-xs text-amber-200/70">{oddsError}</p>
+          </div>
+        ) : oddsLoading && featuredOdds.length === 0 ? (
+          <p role="status" className="p-5 text-sm text-zinc-400">Buscando partidas e cotações…</p>
+        ) : featuredOdds.length === 0 ? (
+          <p className="p-5 text-sm text-zinc-400">Nenhuma partida com cotação disponível para {featuredSport.label} agora.</p>
+        ) : (
+          <div aria-live="polite" className="divide-y divide-[#1e1e24]">
+            {featuredOdds.map(odd => {
+              const commenceDate = odd.commenceTime ? new Date(odd.commenceTime) : new Date()
+              const eventDate = Number.isNaN(commenceDate.getTime()) ? new Date() : commenceDate
+              return (
+                <div key={odd.eventId} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-zinc-100">{odd.homeTeam} <span className="text-zinc-600">x</span> {odd.awayTeam}</p>
+                    <p className="mt-1 text-xs text-zinc-500">{formatOddsEventTime(odd.commenceTime)} · {odd.market}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-5 sm:justify-end">
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-300">{odd.selection} · {odd.price.toFixed(2)}</p>
+                      <p className="mt-1 text-xs text-zinc-500">{odd.bookmaker}</p>
+                    </div>
+                    <Btn
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setModal({ open: true, tip: {
+                        sport: featuredSport.sport,
+                        event: `${odd.homeTeam} x ${odd.awayTeam}`,
+                        market: `${odd.market}: ${odd.selection}`,
+                        odds: odd.price,
+                        units: 1,
+                        result: 'pending',
+                        date: eventDate.toISOString().slice(0, 10),
+                        bookmaker: odd.bookmaker,
+                        potentialReturn: null,
+                        notes: '',
+                      } })}
+                    >
+                      Usar na tip
+                    </Btn>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+        <p className="border-t border-[#1e1e24] px-4 py-3 text-[11px] text-zinc-600 sm:px-5">Odds são cotações informativas de terceiros, podem mudar e não constituem recomendação. O Tipsfy não processa apostas.</p>
+      </Card>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -295,8 +510,8 @@ export default function Tips() {
                           <button onClick={() => setModal({ open: true, tip })} className="text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-400 px-2.5 py-1.5 rounded-lg transition-colors">Editar</button>
                           {tip.result === 'pending' && (
                             <div className="flex gap-1">
-                              <button onClick={() => updateResult(tip.id, 'green')} className="text-xs bg-emerald-950/40 hover:bg-emerald-950/70 text-emerald-400 px-2.5 py-1.5 rounded-lg transition-colors">Green</button>
-                              <button onClick={() => updateResult(tip.id, 'red')} className="text-xs bg-red-950/40 hover:bg-red-950/70 text-red-400 px-2.5 py-1.5 rounded-lg transition-colors">Red</button>
+                              <button onClick={() => void persistResult(tip.id, 'green')} className="text-xs bg-emerald-950/40 hover:bg-emerald-950/70 text-emerald-400 px-2.5 py-1.5 rounded-lg transition-colors">Green</button>
+                              <button onClick={() => void persistResult(tip.id, 'red')} className="text-xs bg-red-950/40 hover:bg-red-950/70 text-red-400 px-2.5 py-1.5 rounded-lg transition-colors">Red</button>
                             </div>
                           )}
                         </div>
@@ -320,7 +535,7 @@ export default function Tips() {
         )}
       </Card>
 
-      {modal.open && <TipModal tip={modal.tip} onClose={() => setModal({ open: false })} onSave={handleSave} />}
+      {modal.open && <TipModal tip={modal.tip} onClose={() => setModal({ open: false })} onSave={handleSave} channels={channels} currentChannelId={channelId} />}
     </div>
   )
 }

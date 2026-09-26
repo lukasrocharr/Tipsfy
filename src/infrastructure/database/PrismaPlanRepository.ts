@@ -16,6 +16,11 @@ export class PrismaPlanRepository implements PlanRepository {
     return record ? this.toDomain(record) : null
   }
 
+  async buscarPorCheckoutSlug(checkoutSlug: string): Promise<Plan | null> {
+    const record = await prisma.plan.findUnique({ where: { checkoutSlug } })
+    return record ? this.toDomain(record) : null
+  }
+
   async listarPorChannelId(channelId: string): Promise<Plan[]> {
     const records = await prisma.plan.findMany({ where: { channelId }, orderBy: { createdAt: 'asc' } })
     return records.map(record => this.toDomain(record))

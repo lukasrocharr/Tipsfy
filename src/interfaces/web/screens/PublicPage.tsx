@@ -1,12 +1,28 @@
 'use client'
 
-import { tips, plans, calcROI } from '../data'
+import { useParams } from 'next/navigation'
+import { usePublicPerformance } from '../hooks/usePublicPerformance'
 import { ResultBadge } from '../components/ui'
+import Link from 'next/link'
 
 export default function PublicPage() {
-  const { roi, winRate, profit } = calcROI(tips)
-  const publicTips = tips.filter(t => t.result !== 'pending')
-  const mainPlan = plans[0]
+  const params = useParams<{ slug: string }>()
+  const slug = params?.slug ?? null
+  const { data, loading, error } = usePublicPerformance(slug)
+
+  if (loading) {
+    return <div className="min-h-screen bg-[#08080a] text-zinc-400 flex items-center justify-center">Carregando página pública…</div>
+  }
+
+  if (error || !data) {
+    return <div className="min-h-screen bg-[#08080a] text-zinc-400 flex items-center justify-center">Página pública indisponível no momento.</div>
+  }
+
+  const { stats, recentTips } = data
+  const roi = stats.roi
+  const winRate = stats.winRate
+  const profit = stats.profit
+  const publicTips = recentTips
 
   return (
     <div className="min-h-screen bg-[#08080a]">
@@ -24,14 +40,14 @@ export default function PublicPage() {
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
           </div>
-          <h1 className="text-4xl font-black text-zinc-100 mb-2 tracking-tight">Rafael Tipster</h1>
-          <p className="text-zinc-500 font-mono text-sm mb-1">@SinaisFutebolVIP</p>
+          <h1 className="text-4xl font-black text-zinc-100 mb-2 tracking-tight">{data.channelName}</h1>
+          <p className="text-zinc-500 font-mono text-sm mb-1">@{slug}</p>
           <p className="text-zinc-400 text-sm max-w-md mx-auto mt-4 leading-relaxed">
             Análises profissionais para futebol e tênis. Mais de 3 anos de histórico verificado
             publicamente. Transparência total, sem promessas milagrosas.
           </p>
           <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
-            {['⚽ Futebol', '🎾 Tênis', '🏀 Basquete', '📊 Verificado'].map(tag => (
+            {['⚽ Futebol', '🎾 Tênis', '📊 Verificado'].map(tag => (
               <span key={tag} className="text-xs bg-zinc-900/80 border border-[#1e1e24] text-zinc-400 px-3 py-1.5 rounded-full">{tag}</span>
             ))}
           </div>
@@ -66,29 +82,9 @@ export default function PublicPage() {
           </div>
           <div>
             <p className="text-sm font-semibold text-zinc-100">
-              {profit >= 0 ? `+${profit.toFixed(2)} unidades` : `${profit.toFixed(2)} unidades`} de lucro no mês
+              {profit >= 0 ? `+${profit.toFixed(2)} unidades` : `${profit.toFixed(2)} unidades`} de lucro no total
             </p>
-            <p className="text-xs text-zinc-500 mt-0.5">Calculado sobre as {publicTips.filter(t => t.result !== 'void').length} tips validadas do período.</p>
-          </div>
-        </div>
-
-        {/* Plans */}
-        <div className="mb-10">
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4">Planos disponíveis</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {plans.map((plan, i) => (
-              <div key={plan.id} className={`rounded-xl border p-4 transition-all ${i === 0 ? 'border-emerald-500/40 bg-emerald-950/15' : 'border-[#1e1e24] bg-[#111114]'}`}>
-                {i === 0 && <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">Mais popular</p>}
-                <p className="font-semibold text-zinc-100 text-sm">{plan.name}</p>
-                <div className="flex items-baseline gap-0.5 mt-1">
-                  <span className="text-xl font-black font-mono text-emerald-400">R$ {plan.price.toFixed(2).replace('.', ',')}</span>
-                  <span className="text-xs text-zinc-600">/{plan.period === 'monthly' ? 'mês' : plan.period === 'quarterly' ? 'trim.' : 'ano'}</span>
-                </div>
-                <button className={`w-full mt-3 py-2 rounded-lg text-xs font-semibold transition-colors ${i === 0 ? 'bg-emerald-500 hover:bg-emerald-400 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'}`}>
-                  Assinar
-                </button>
-              </div>
-            ))}
+            <p className="text-xs text-zinc-500 mt-0.5">Calculado sobre as {stats.settled} tips validadas.</p>
           </div>
         </div>
 
@@ -155,16 +151,15 @@ export default function PublicPage() {
       <div className="fixed bottom-0 inset-x-0 z-40 bg-[#08080a]/95 backdrop-blur-md border-t border-[#1e1e24]">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-sm font-bold text-zinc-100">{mainPlan.name}</p>
+            <p className="text-sm font-bold text-zinc-100">Acesso ao canal</p>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-lg font-black font-mono text-emerald-400">R$ {mainPlan.price.toFixed(2).replace('.', ',')}</span>
-              <span className="text-xs text-zinc-600">/mês</span>
-              <span className="text-xs text-zinc-600 hidden sm:inline">• Acesso imediato ao grupo</span>
+              <span className="text-lg font-black font-mono text-emerald-400">VIP</span>
+              <span className="text-xs text-zinc-600">• Conteúdo premium</span>
             </div>
           </div>
-          <button className="bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-black px-5 py-3 rounded-xl transition-all text-sm whitespace-nowrap shadow-xl shadow-emerald-500/25 flex-shrink-0">
-            Assinar Grupo VIP →
-          </button>
+          <Link href="/" className="bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-black px-5 py-3 rounded-xl transition-all text-sm whitespace-nowrap shadow-xl shadow-emerald-500/25 flex-shrink-0">
+            Voltar ao início →
+          </Link>
         </div>
       </div>
     </div>

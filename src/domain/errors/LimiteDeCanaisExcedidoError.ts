@@ -6,5 +6,6 @@ export class LimiteDeCanaisExcedidoError extends Error {
   constructor() {
     super('O plano Starter permite apenas um canal.')
     this.name = 'LimiteDeCanaisExcedidoError'
+    Object.setPrototypeOf(this, new.target.prototype)
   }
 }

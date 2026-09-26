@@ -6,12 +6,12 @@ import { getAuthenticatedTipsterId } from '../auth/session'
 
 const channelSchema = z.object({
   telegramChatId: z.string().min(1),
-  botTokenEnc: z.string().min(1),
+  botTokenEnc: z.string().min(1).nullable().optional(),
   name: z.string().trim().min(1),
 })
 
-function toResponse(channel: { id: string; tipsterId: string; telegramChatId: string; name: string }) {
-  return { id: channel.id, tipsterId: channel.tipsterId, telegramChatId: channel.telegramChatId, name: channel.name }
+function toResponse(channel: { id: string; tipsterId: string; telegramChatId: string; name: string; botTokenEnc?: string | null }) {
+  return { id: channel.id, tipsterId: channel.tipsterId, telegramChatId: channel.telegramChatId, name: channel.name, connected: Boolean(channel.botTokenEnc) }
 }
 
 export async function GET() {
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const parsed = channelSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ message: 'Dados do canal inválidos.' }, { status: 400 })
   try {
-    const channel = await criarCanalUseCaseFactory().execute({ ...parsed.data, tipsterId })
+    const channel = await criarCanalUseCaseFactory().execute({ ...parsed.data, botTokenEnc: parsed.data.botTokenEnc ?? null, tipsterId })
     return NextResponse.json({ channel: toResponse(channel) }, { status: 201 })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Não foi possível criar o canal.'

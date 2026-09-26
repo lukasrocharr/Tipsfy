@@ -7,5 +7,7 @@ import type { Channel } from '../../domain/entities/Channel'
 export interface ChannelRepository {
   salvar(channel: Channel): Promise<void>
   buscarPorId(id: string): Promise<Channel | null>
+  buscarPorPublicSlug(publicSlug: string): Promise<Channel | null>
   listarPorTipsterId(tipsterId: string): Promise<Channel[]>
+  atualizarBotToken(id: string, botTokenEnc: string | null): Promise<void>
 }
