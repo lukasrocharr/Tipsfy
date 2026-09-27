@@ -1,31 +1,9 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react"
+import type { PublicPerformanceResult } from "../../../application/use-cases/channels/ObterPerformancePublicaUseCase"
 
-export type PublicPerformance = {
-  channelName: string
-  stats: {
-    total: number
-    wins: number
-    losses: number
-    pending: number
-    winRate: number
-    roi: number
-    profit: number
-    settled: number
-  }
-  recentTips: Array<{
-    id: string
-    sport: string
-    event: string
-    market: string
-    odds: number
-    units: number
-    result: 'green' | 'red' | 'void' | 'pending'
-    date: string
-    bookmaker: string | null
-  }>
-}
+export type PublicPerformance = PublicPerformanceResult
 
 export function usePublicPerformance(slug?: string | null) {
   const [data, setData] = useState<PublicPerformance | null>(null)
@@ -47,17 +25,24 @@ export function usePublicPerformance(slug?: string | null) {
       setError(null)
 
       try {
-        const response = await fetch(`/api/public/${encodeURIComponent(slug)}/performance`, { signal: controller.signal })
+        const response = await fetch(
+          `/api/public/${encodeURIComponent(slug)}/performance`,
+          { signal: controller.signal },
+        )
         if (!response.ok) {
-          throw new Error('Página pública indisponível no momento.')
+          throw new Error("Página pública indisponível no momento.")
         }
 
-        const body = await response.json() as PublicPerformance
+        const body = (await response.json()) as PublicPerformance
         if (active) setData(body)
       } catch (loadError) {
         if (active) {
           setData(null)
-          setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar a página pública.')
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Não foi possível carregar a página pública.",
+          )
         }
       } finally {
         if (active) setLoading(false)

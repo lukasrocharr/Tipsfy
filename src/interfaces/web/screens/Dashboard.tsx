@@ -209,7 +209,7 @@ export default function Dashboard() {
                 { label: 'Criar novo plano', icon: '₿', screen: 'plans', color: 'text-emerald-400 bg-emerald-950/50' },
                 { label: 'Registrar nova tip', icon: '◈', screen: 'tips', color: 'text-blue-400 bg-blue-950/50' },
                 { label: 'Ver assinantes', icon: '👥', screen: 'subscribers', color: 'text-violet-400 bg-violet-950/50' },
-                { label: 'Página pública', icon: '◉', screen: 'public', color: 'text-amber-400 bg-amber-950/50' },
+                { label: 'Página pública', icon: '◉', screen: 'public-page-editor', color: 'text-amber-400 bg-amber-950/50' },
               ].map(a => (
                 <button key={a.screen} onClick={() => router.push(`/${a.screen}`)} className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg hover:bg-[#18181c]/60 transition-colors group text-left">
                   <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${a.color}`}>{a.icon}</span>

@@ -7,8 +7,8 @@ const repository = new PrismaTipsterRepository()
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
-  secret: process.env.NEXTAUTH_SECRET,
-  pages: { signIn: '/onboarding' },
+  secret: process.env.NEXTAUTH_SECRET ?? 'dev-tipsfy-nextauth-secret-2026',
+  pages: { signIn: '/login' },
   providers: [
     CredentialsProvider({
       name: 'Credenciais',
@@ -26,11 +26,21 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.id = user.id
+      if (user?.id) token.id = user.id
+      if (!token.id && token.sub) token.id = token.sub
       return token
     },
     async session({ session, token }) {
-      if (session.user && token.id) session.user.id = token.id
+      if (session.user) {
+        const tipsterId = token.id ?? token.sub ?? null
+        if (tipsterId) session.user.id = tipsterId
+        else if (typeof session.user.email === 'string') {
+          const tipster = await repository.buscarPorEmail(
+            session.user.email.trim().toLowerCase(),
+          )
+          if (tipster) session.user.id = tipster.id
+        }
+      }
       return session
     },
   },

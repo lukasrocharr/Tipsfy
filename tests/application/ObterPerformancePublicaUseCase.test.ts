@@ -1,84 +1,202 @@
-import { describe, expect, it, vi } from 'vitest'
-import { ObterPerformancePublicaUseCase } from '../../src/application/use-cases/channels/ObterPerformancePublicaUseCase'
-import { RecursoNaoDisponivelNoPlanoError } from '../../src/domain/errors/RecursoNaoDisponivelNoPlanoError'
-import { Channel } from '../../src/domain/entities/Channel'
-import { Tip } from '../../src/domain/entities/Tip'
-import { Tipster } from '../../src/domain/entities/Tipster'
+import { describe, expect, it } from "vitest"
+import { ObterPerformancePublicaUseCase } from "../../src/application/use-cases/channels/ObterPerformancePublicaUseCase"
+import { Channel } from "../../src/domain/entities/Channel"
+import { PageDocument } from "../../src/domain/entities/PageDocument"
+import { Plan } from "../../src/domain/entities/Plan"
+import { Tip } from "../../src/domain/entities/Tip"
+import { Tipster } from "../../src/domain/entities/Tipster"
+import { RecursoNaoDisponivelNoPlanoError } from "../../src/domain/errors/RecursoNaoDisponivelNoPlanoError"
+import { PAGE_BUILDER_TEMPLATES } from "../../src/infrastructure/page-builder/templates"
 
-describe('ObterPerformancePublicaUseCase', () => {
-  it('não expõe campos sensíveis mesmo com novos campos na entidade Channel', async () => {
-    const channel = new Channel('channel-1', 'tipster-1', 'chat-1', 'enc', 'Canal Premium', 'canal-premium')
-    const tipster = new Tipster('tipster-1', 'user@example.com', 'hash', 'PRO', new Date())
-    const tip = new Tip('tip-1', 'channel-1', 'Futebol', 'Flamengo x Palmeiras', 'Resultado', 2.5, 1, 'green', '2026-09-25', 1.5, 'Bet365', 'Boa análise')
+function createPageDocument(): PageDocument {
+  return new PageDocument({
+    ...structuredClone(PAGE_BUILDER_TEMPLATES["resultados-abertos"]),
+    channelId: "channel-1",
+    updatedAt: new Date("2026-09-26T00:00:00.000Z"),
+  })
+}
 
-    const channelRepository = {
-      salvar: vi.fn(),
-      buscarPorId: vi.fn(async () => channel),
-      buscarPorPublicSlug: vi.fn(async () => channel),
-      listarPorTipsterId: vi.fn(async () => [channel]),
-      atualizarBotToken: vi.fn(),
-      listarTodos: vi.fn(async () => [channel]),
-    }
-    const tipRepository = {
-      salvar: vi.fn(),
-      atualizar: vi.fn(),
-      buscarPorId: vi.fn(async () => tip),
-      listarPorCanal: vi.fn(async () => [tip]),
-      remover: vi.fn(),
-      atualizarResultado: vi.fn(),
-    }
-    const tipsterRepository = {
-      salvar: vi.fn(),
-      buscarPorId: vi.fn(async () => tipster),
-      buscarPorEmail: vi.fn(async () => tipster),
-      existeEmail: vi.fn(async () => false),
-    }
+function createTip(id: string, result: "green" | "red", odds = 2): Tip {
+  return new Tip(
+    id,
+    "channel-1",
+    "Futebol",
+    "Flamengo x Palmeiras",
+    "Resultado",
+    odds,
+    1,
+    result,
+    "2026-09-25",
+    null,
+    "Bet365",
+    "Análise",
+  )
+}
 
-    const result = await new ObterPerformancePublicaUseCase(channelRepository as any, tipRepository as any, tipsterRepository as any).execute({ publicSlug: 'canal-premium' })
+function createPlan(id: string, active: boolean, subscribers: number): Plan {
+  return new Plan(
+    id,
+    "Plano VIP",
+    29.9,
+    "monthly",
+    active,
+    "Análises premium",
+    "channel-1",
+    `checkout-${id}`,
+    subscribers,
+  )
+}
 
-    expect(result).toMatchObject({
-      channelName: 'Canal Premium',
-      recentTips: [{ id: 'tip-1' }],
-      stats: { total: 1 },
-    })
-    expect(result).not.toHaveProperty('email')
-    expect(result).not.toHaveProperty('payments')
-    expect(result).not.toHaveProperty('subscribers')
+function createContext(
+  options: {
+    planTier?: "STARTER" | "PRO"
+    document?: PageDocument | null
+    tips?: Tip[]
+    plans?: Plan[]
+  } = {},
+) {
+  const channel = new Channel(
+    "channel-1",
+    "tipster-1",
+    "chat-1",
+    "encrypted-token",
+    "Canal Premium",
+    "canal-premium",
+  )
+  const tipster = new Tipster(
+    "tipster-1",
+    "private-tipster@example.com",
+    "private-password-hash",
+    options.planTier ?? "PRO",
+    new Date(),
+  )
+  const tipRepository = {
+    tips: options.tips ?? [createTip("tip-1", "green")],
+    async listarPorCanal(channelId: string) {
+      return this.tips.filter((tip) => tip.channelId === channelId)
+    },
+  }
+  const pageDocument = options.document ?? null
+  const plans = options.plans ?? []
+  const useCase = new ObterPerformancePublicaUseCase(
+    { buscarPorPublicSlug: async () => channel } as any,
+    tipRepository as any,
+    { buscarPorId: async () => tipster } as any,
+    { obterPorCanal: async () => pageDocument } as any,
+    {
+      listarPorChannelId: async (channelId: string) =>
+        plans.filter((plan) => plan.channelId === channelId),
+    } as any,
+  )
 
-    const serialized = JSON.stringify(result)
-    expect(serialized).not.toContain('user@example.com')
-    expect(serialized).not.toContain('hash')
+  return { useCase, tipRepository }
+}
+
+describe("ObterPerformancePublicaUseCase", () => {
+  it("retorna estado vazio quando ainda não há documento de página", async () => {
+    const { useCase } = createContext({ document: null })
+
+    const result = await useCase.execute({ publicSlug: "canal-premium" })
+
+    expect(result.pageStatus).toBe("not-configured")
+    expect(result.pageDocument).toBeNull()
+    expect(result.channelName).toBe("Canal Premium")
   })
 
-  it('bloqueia acesso de tipster STARTER com RecursoNaoDisponivelNoPlanoError', async () => {
-    const channel = new Channel('channel-1', 'tipster-1', 'chat-1', 'enc', 'Canal Starter', 'canal-starter')
-    const tipster = new Tipster('tipster-1', 'user@example.com', 'hash', 'STARTER', new Date())
+  it("reflete nas estatísticas do bloco STATS as tips alteradas após salvar o documento", async () => {
+    const document = createPageDocument()
+    const { useCase, tipRepository } = createContext({
+      document,
+      tips: [createTip("tip-1", "green")],
+    })
 
-    const useCase = new ObterPerformancePublicaUseCase(
-      {
-        salvar: vi.fn(),
-        buscarPorId: vi.fn(async () => channel),
-        buscarPorPublicSlug: vi.fn(async () => channel),
-        listarPorTipsterId: vi.fn(async () => [channel]),
-        atualizarBotToken: vi.fn(),
-        listarTodos: vi.fn(async () => [channel]),
-      } as any,
-      {
-        salvar: vi.fn(),
-        atualizar: vi.fn(),
-        buscarPorId: vi.fn(async () => null),
-        listarPorCanal: vi.fn(async () => []),
-        remover: vi.fn(),
-        atualizarResultado: vi.fn(),
-      } as any,
-      {
-        salvar: vi.fn(),
-        buscarPorId: vi.fn(async () => tipster),
-        buscarPorEmail: vi.fn(async () => tipster),
-        existeEmail: vi.fn(async () => false),
-      } as any,
+    const firstRead = await useCase.execute({ publicSlug: "canal-premium" })
+    const firstStatsBlock = firstRead.pageDocument?.blocks.find(
+      (block) => block.type === "STATS",
+    )
+    expect(firstStatsBlock?.content).toMatchObject({ total: 1, wins: 1 })
+
+    tipRepository.tips = [
+      createTip("tip-1", "green"),
+      createTip("tip-2", "red", 1.8),
+    ]
+    const secondRead = await useCase.execute({ publicSlug: "canal-premium" })
+    const secondStatsBlock = secondRead.pageDocument?.blocks.find(
+      (block) => block.type === "STATS",
     )
 
-    await expect(useCase.execute({ publicSlug: 'canal-starter' })).rejects.toBeInstanceOf(RecursoNaoDisponivelNoPlanoError)
+    expect(secondRead.stats).toMatchObject({ total: 2, wins: 1, losses: 1 })
+    expect(secondStatsBlock?.content).toEqual(secondRead.stats)
+    expect(
+      document.blocks.find((block) => block.type === "STATS")?.content,
+    ).toEqual({})
+  })
+
+  it("insere somente planos ativos e não inclui contagem de assinantes", async () => {
+    const { useCase } = createContext({
+      document: createPageDocument(),
+      plans: [createPlan("active", true, 20), createPlan("inactive", false, 8)],
+    })
+
+    const result = await useCase.execute({ publicSlug: "canal-premium" })
+    const plansBlock = result.pageDocument?.blocks.find(
+      (block) => block.type === "PLANS",
+    )
+
+    expect(plansBlock?.content).toHaveLength(1)
+    expect(plansBlock?.content[0]).toMatchObject({
+      id: "active",
+      name: "Plano VIP",
+    })
+    expect(plansBlock?.content[0]).not.toHaveProperty("subscribers")
+    expect(plansBlock?.content[0]).not.toHaveProperty("channelId")
+  })
+
+  it("aplica allowlist ao retorno e ao conteúdo persistido dos blocos", async () => {
+    const document = createPageDocument()
+    const hero = document.blocks.find((block) => block.type === "HERO")
+    const statsBlock = document.blocks.find((block) => block.type === "STATS")
+    const plansBlock = document.blocks.find((block) => block.type === "PLANS")
+    if (!hero || !statsBlock || !plansBlock)
+      throw new Error("Template incompleto no teste.")
+
+    Object.assign(hero.content, {
+      email: "private-block@example.com",
+      payments: ["private-payment"],
+    })
+    Object.assign(hero.style, {
+      subscriberList: ["private-subscriber@example.com"],
+    })
+    Object.assign(hero, { bankDetails: "private-bank-details" })
+    Object.assign(statsBlock.content, { paymentData: "private-stats-payment" })
+    Object.assign(plansBlock.content, {
+      subscriberEmails: ["private-plan-subscriber@example.com"],
+    })
+
+    const { useCase } = createContext({
+      document,
+      plans: [createPlan("active", true, 20)],
+    })
+
+    const result = await useCase.execute({ publicSlug: "canal-premium" })
+    const serialized = JSON.stringify(result)
+
+    expect(result.pageStatus).toBe("configured")
+    expect(serialized).not.toContain("private-tipster@example.com")
+    expect(serialized).not.toContain("private-password-hash")
+    expect(serialized).not.toContain("private-block@example.com")
+    expect(serialized).not.toContain("private-payment")
+    expect(serialized).not.toContain("private-subscriber")
+    expect(serialized).not.toContain("private-bank-details")
+    expect(result).not.toHaveProperty("payments")
+    expect(result).not.toHaveProperty("subscribers")
+  })
+
+  it("bloqueia tipster STARTER com RecursoNaoDisponivelNoPlanoError", async () => {
+    const { useCase } = createContext({ planTier: "STARTER" })
+
+    await expect(
+      useCase.execute({ publicSlug: "canal-premium" }),
+    ).rejects.toBeInstanceOf(RecursoNaoDisponivelNoPlanoError)
   })
 })

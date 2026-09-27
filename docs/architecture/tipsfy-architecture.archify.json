@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitetura do Tipsfy e dependências",
+    "output": "docs/architecture/tipsfy-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/lukasrocharr/Tipsfy",
+      "revision": "f8a6fac2b475c8117f164733ee274b5883c0c956"
+    },
+    "viewBox": [1280, 580]
+  },
+  "components": [
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Interfaces · Web",
+      "sublabel": "App Router, telas e hooks",
+      "pos": [30, 30],
+      "size": [220, 94],
+      "sources": [
+        { "path": "src/interfaces/web/app/(dashboard)/financials/page.tsx", "line": 1, "label": "tela financeira" },
+        { "path": "src/interfaces/web/hooks/useTransactions.ts", "line": 12, "label": "chama API HTTP" },
+        { "path": "src/interfaces/web/data.ts", "line": 1, "label": "tipo Transaction" }
+      ]
+    },
+    {
+      "id": "http",
+      "type": "backend",
+      "label": "Interfaces · HTTP",
+      "sublabel": "handlers e rotas Next.js",
+      "pos": [25, 180],
+      "size": [230, 100],
+      "sources": [
+        { "path": "src/interfaces/http/checkout/payRoute.ts", "line": 3, "label": "usa factory" },
+        { "path": "src/interfaces/http/channels/botTokenRoute.ts", "line": 2, "label": "acesso direto adicional" }
+      ]
+    },
+    {
+      "id": "application",
+      "type": "backend",
+      "label": "Application",
+      "sublabel": "use cases e portas",
+      "pos": [345, 180],
+      "size": [230, 100],
+      "sources": [
+        { "path": "src/application/ports/TipRepository.ts", "line": 5, "label": "porta" },
+        { "path": "src/application/use-cases/tips/RegistrarTipUseCase.ts", "line": 1, "label": "caso de uso" },
+        { "path": "src/application/use-cases/financials/ListarTransacoesUseCase.ts", "line": 1, "label": "dependência web indevida" }
+      ]
+    },
+    {
+      "id": "domain",
+      "type": "backend",
+      "label": "Domain",
+      "sublabel": "entidades e regras de negócio",
+      "pos": [640, 180],
+      "size": [230, 100],
+      "sources": [
+        { "path": "src/domain/entities/Tip.ts", "line": 1, "label": "entidade Tip" },
+        { "path": "src/domain/services/EstatisticasDeTips.ts", "line": 1, "label": "serviço de domínio" }
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "type": "backend",
+      "label": "Infrastructure",
+      "sublabel": "Prisma, pagamentos, Telegram e integrações",
+      "pos": [935, 180],
+      "size": [280, 100],
+      "sources": [
+        { "path": "src/infrastructure/database/PrismaTipRepository.ts", "line": 1, "label": "adaptador Prisma" },
+        { "path": "src/infrastructure/payments/MercadoPagoGateway.ts", "line": 1, "label": "gateway" },
+        { "path": "src/infrastructure/factories/checkoutUseCaseFactory.ts", "line": 1, "label": "composition root" }
+      ]
+    },
+    {
+      "id": "api-violations-channels",
+      "type": "backend",
+      "label": "API · imports diretos 1/4",
+      "sublabel": "canais: Prisma, crypto e Telegram",
+      "tag": "violação",
+      "pos": [20, 430],
+      "size": [270, 110],
+      "sources": [
+        { "path": "src/app/api/channels/[id]/stats/route.ts", "line": 2, "end_line": 4, "label": "stats" },
+        { "path": "src/app/api/channels/[id]/subscribers/route.ts", "line": 3, "end_line": 6, "label": "subscribers" },
+        { "path": "src/app/api/channels/[id]/tips/route.ts", "line": 3, "end_line": 8, "label": "tips" }
+      ]
+    },
+    {
+      "id": "api-violations-jobs",
+      "type": "backend",
+      "label": "API · imports diretos 2/4",
+      "sublabel": "dashboard, inadimplência e notificações",
+      "tag": "violação",
+      "pos": [320, 430],
+      "size": [270, 110],
+      "sources": [
+        { "path": "src/app/api/dashboard/summary/route.ts", "line": 4, "label": "dashboard" },
+        { "path": "src/app/api/internal/run-subscription-check/route.ts", "line": 3, "end_line": 13, "label": "subscription check" },
+        { "path": "src/app/api/notifications/route.ts", "line": 2, "label": "notifications" }
+      ]
+    },
+    {
+      "id": "api-violations-odds",
+      "type": "backend",
+      "label": "API · imports diretos 3/4",
+      "sublabel": "odds, performance pública e cancelamento",
+      "tag": "violação",
+      "pos": [620, 430],
+      "size": [270, 110],
+      "sources": [
+        { "path": "src/app/api/odds/best/route.ts", "line": 4, "end_line": 5, "label": "odds" },
+        { "path": "src/app/api/public/[publicSlug]/performance/route.ts", "line": 4, "end_line": 6, "label": "performance" },
+        { "path": "src/app/api/subscriptions/[id]/cancel/route.ts", "line": 2, "end_line": 10, "label": "cancelamento" }
+      ]
+    },
+    {
+      "id": "api-violations-other",
+      "type": "backend",
+      "label": "API · imports diretos 4/4",
+      "sublabel": "resultado, transações e webhook Telegram",
+      "tag": "violação",
+      "pos": [920, 430],
+      "size": [270, 110],
+      "sources": [
+        { "path": "src/app/api/tips/[id]/result/route.ts", "line": 4, "end_line": 5, "label": "resultado" },
+        { "path": "src/app/api/tipster/transactions/route.ts", "line": 3, "label": "transações" },
+        { "path": "src/app/api/webhooks/telegram/[channelId]/route.ts", "line": 29, "label": "import dinâmico" }
+      ]
+    }
+  ],
+  "connections": [
+    { "id": "web-to-http", "from": "web", "to": "http", "label": "fetch /api", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelAt": [140, 158] },
+    { "id": "http-to-application", "from": "http", "to": "application", "label": "invoca casos de uso", "labelDy": -48, "labelDx": 100 },
+    { "id": "application-to-domain", "from": "application", "to": "domain", "label": "usa entidades e regras", "fromSide": "right", "toSide": "left", "labelDy": -48 },
+    { "id": "infrastructure-to-application", "from": "infrastructure", "to": "application", "label": "implementa portas", "variant": "emphasis", "fromSide": "bottom", "toSide": "right", "via": [[1075, 320], [600, 320], [600, 230]] },
+    { "id": "infrastructure-to-domain", "from": "infrastructure", "to": "domain", "label": "mapeia entidades", "fromSide": "left", "toSide": "right", "labelAt": [903, 294] },
+    { "id": "http-to-infrastructure", "from": "http", "to": "infrastructure", "label": "handlers usam factories", "fromSide": "right", "toSide": "top", "labelSegment": 2, "via": [[300, 230], [300, 50], [1075, 50]] },
+    { "id": "api-to-infrastructure", "from": "http", "to": "infrastructure", "label": "12 rotas bypassam factories", "variant": "security", "fromSide": "bottom", "toSide": "bottom", "via": [[140, 360], [1075, 360]] }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Regra de dependência",
+      "items": [
+        "12 rotas src/app/api/**/route.ts importam infrastructure fora de factories/.",
+        "src/application/ não importa src/infrastructure/ diretamente.",
+        "ListarTransacoesUseCase importa Transaction de src/interfaces/web/data.",
+        "Um handler src/interfaces/http/ também acessa Prisma diretamente (botTokenRoute.ts)."
+      ]
+    }
+  ]
+}
