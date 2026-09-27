@@ -12,6 +12,8 @@ logs/
 *.log
 .claude-replay.*
 .tmp-*
+.agents/
+skills-lock.json
 /.figma/design-context/
 
 # Platform-managed agentplat state, not project source. In the
