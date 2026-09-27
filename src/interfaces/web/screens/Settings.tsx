@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { Card, Btn, Input, SectionHeader } from '../components/ui'
 import { useConnectBot } from '../hooks/useConnectBot'
 import { useSettings } from '../hooks/useSettings'
-import { CircleAlert, CircleCheck, Download, Trash2 } from 'lucide-react'
+import ImageUploadField from '../components/page-builder/ImageUploadField'
+import { Bell, CircleAlert, CircleCheck, CreditCard, Download, Send, Settings as SettingsIcon, Trash2, UserRound } from 'lucide-react'
 
 function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
@@ -36,9 +37,10 @@ export default function Settings() {
   const [tab, setTab] = useState<'profile' | 'telegram' | 'notifications' | 'payments' | 'danger'>('profile')
 
   const [profile, setProfile] = useState({ name: 'Rafael Tipster', email: 'rafael@tipsfy.io', bio: 'Análises profissionais para futebol e tênis. +3 anos de histórico verificado.', channel: '@SinaisFutebolVIP', site: 'https://rafaeltipster.com' })
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState('')
   const [notif, setNotif] = useState({ newSubscriber: true, payment: true, delinquent: true, tips: false, weekly: true })
   const { connectBot, disconnectBot, connected, chatId, error: botError } = useConnectBot()
-  const { saving, saved, setSaved, saveProfile, saveNotificationPreferences, saveBankDetails, deleteAccount } = useSettings()
+  const { saving, saved, error: settingsError, setSaved, saveProfile, saveNotificationPreferences, saveBankDetails, deleteAccount } = useSettings()
   const [publicChannels, setPublicChannels] = useState<Array<{ id: string; name: string; publicSlug: string | null }>>([])
   const [publicChannelId, setPublicChannelId] = useState('')
   const [publicOrigin, setPublicOrigin] = useState('')
@@ -56,14 +58,19 @@ export default function Settings() {
   })
 
   async function saveProfileState() {
-    await saveProfile({
-      name: profile.name,
-      email: profile.email,
-      bio: profile.bio,
-      website: profile.site,
-    })
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    try {
+      await saveProfile({
+        name: profile.name,
+        email: profile.email,
+        bio: profile.bio,
+        website: profile.site,
+        profilePhotoUrl,
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch {
+      setSaved(false)
+    }
   }
 
   async function saveNotificationsState() {
@@ -95,16 +102,31 @@ export default function Settings() {
   }
 
   const tabs = [
-    { id: 'profile', label: 'Perfil', icon: '👤' },
-    { id: 'telegram', label: 'Telegram', icon: '✈️' },
-    { id: 'notifications', label: 'Notificações', icon: '🔔' },
-    { id: 'payments', label: 'Pagamentos', icon: '💳' },
-    { id: 'danger', label: 'Conta', icon: '⚙️' },
+    { id: 'profile', label: 'Perfil', icon: UserRound },
+    { id: 'telegram', label: 'Telegram', icon: Send },
+    { id: 'notifications', label: 'Notificações', icon: Bell },
+    { id: 'payments', label: 'Pagamentos', icon: CreditCard },
+    { id: 'danger', label: 'Conta', icon: SettingsIcon },
   ] as const
 
   useEffect(() => {
     let active = true
     setPublicOrigin(window.location.origin)
+    void fetch('/api/tipster/profile')
+      .then(async response => {
+        if (!response.ok) return
+        const body = await response.json() as { tipster: { name: string; email: string; bio: string; website: string; profilePhotoUrl: string | null } }
+        if (!active) return
+        setProfile(current => ({
+          ...current,
+          name: body.tipster.name,
+          email: body.tipster.email,
+          bio: body.tipster.bio,
+          site: body.tipster.website,
+        }))
+        setProfilePhotoUrl(body.tipster.profilePhotoUrl ?? '')
+      })
+      .catch(() => {})
     void fetch('/api/channels')
       .then(async response => {
         if (!response.ok) return
@@ -136,7 +158,7 @@ export default function Settings() {
           <div className="flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
             {tabs.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap w-full text-left ${tab === t.id ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-800/30' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40'}`}>
-                <span className="text-base">{t.icon}</span>
+                <t.icon size={16} className="flex-shrink-0 text-current" aria-hidden="true" />
                 {t.label}
               </button>
             ))}
@@ -149,11 +171,21 @@ export default function Settings() {
             <Card className="p-6 space-y-6">
               <Section title="Perfil Público" sub="Informações exibidas na sua página pública.">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 mb-5">
-                    <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center text-2xl font-black text-white">R</div>
-                    <div>
-                      <button className="text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors">Alterar foto</button>
-                      <p className="text-[10px] text-zinc-700 mt-1.5">JPG, PNG ou GIF • máx. 2MB</p>
+                  <div className="flex items-start gap-4 mb-5">
+                    {profilePhotoUrl ? (
+                      <img src={profilePhotoUrl} alt="Foto do perfil" className="h-16 w-16 rounded-2xl object-cover" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center text-2xl font-black text-white">{profile.name.trim().charAt(0).toUpperCase() || 'T'}</div>
+                    )}
+                    <div className="w-full max-w-xs">
+                      <ImageUploadField
+                        context="profile"
+                        assetType="profile-avatar"
+                        label="Foto de perfil"
+                        value={profilePhotoUrl}
+                        onChange={setProfilePhotoUrl}
+                      />
+                      <p className="text-[10px] text-zinc-500 mt-1.5">JPEG, PNG ou WebP • máx. 5 MB. Salve o perfil para confirmar.</p>
                     </div>
                   </div>
                   <Input label="Nome de exibição" value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} />
@@ -205,6 +237,7 @@ export default function Settings() {
                   {saved ? '✓ Salvo!' : 'Salvar Perfil'}
                 </Btn>
                 {saved && <span className="text-xs text-emerald-400">Alterações salvas com sucesso.</span>}
+                {settingsError && <p className="text-xs text-red-400" role="alert">{settingsError}</p>}
               </div>
             </Card>
           )}

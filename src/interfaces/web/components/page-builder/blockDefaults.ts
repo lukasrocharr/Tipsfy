@@ -1,10 +1,5 @@
-import {
-  PALETAS_CURADAS,
-  PAREAMENTOS_DE_FONTES,
-  type FontPairingId,
-  type PrimaryColorId,
-} from "../../../../domain/value-objects/CatalogoDeEstilo"
 import type { GlobalTheme } from "../../../../domain/entities/PageDocument"
+import type { FontPairingId, PrimaryColorId } from "../../../../domain/value-objects/CatalogoDeEstilo"
 import type {
   PageBlock,
   PageBlockStyle,
@@ -17,17 +12,13 @@ export const DEFAULT_PAGE_THEME: GlobalTheme = {
 }
 
 export function createBlockStyle(
-  theme: GlobalTheme,
-  type: PageBlockType,
+  _theme: GlobalTheme,
+  _type: PageBlockType,
 ): PageBlockStyle {
-  const palette = PALETAS_CURADAS[theme.primaryColorId]
-  const pairing = PAREAMENTOS_DE_FONTES[theme.fontPairingId]
-  const useHeadingFont = type === "HERO" || type === "CUSTOM_TEXT"
-
   return {
-    backgroundColor: palette.background,
-    textColor: palette.foreground,
-    fontFamily: useHeadingFont ? pairing.heading : pairing.body,
+    backgroundColor: "#0B0F14",
+    textColor: "#F8FAFC",
+    fontFamily: "Montserrat",
     alignment: "left",
     padding: 16,
   }

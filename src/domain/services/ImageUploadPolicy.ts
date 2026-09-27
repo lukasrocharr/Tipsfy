@@ -7,7 +7,7 @@ export const SUPPORTED_IMAGE_TYPES = [
 ] as const
 
 export type SupportedImageType = (typeof SUPPORTED_IMAGE_TYPES)[number]
-export type ImageAssetType = "hero-banner" | "hero-avatar" | "block-image"
+export type ImageAssetType = "hero-banner" | "hero-avatar" | "block-image" | "profile-avatar"
 
 export const IMAGE_EXTENSION_BY_TYPE: Record<SupportedImageType, string> = {
   "image/jpeg": "jpg",

@@ -16,12 +16,14 @@ const ACCEPTED_TYPES = SUPPORTED_IMAGE_TYPES.join(",")
 
 export default function ImageUploadField({
   channelId,
+  context = "channel",
   assetType,
   label,
   value,
   onChange,
 }: {
-  channelId: string
+  channelId?: string
+  context?: "channel" | "profile"
   assetType: ImageAssetType
   label: string
   value: string
@@ -32,7 +34,8 @@ export default function ImageUploadField({
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const isAvatar = assetType === "hero-avatar"
+  const isProfile = context === "profile"
+  const isAvatar = assetType === "hero-avatar" || assetType === "profile-avatar"
 
   async function uploadFile(file: File | undefined) {
     if (!file || uploading) return
@@ -59,9 +62,17 @@ export default function ImageUploadField({
       return
     }
 
-    const pathname = `channels/${channelId}/${assetType}/${crypto.randomUUID()}.${IMAGE_EXTENSION_BY_TYPE[contentType]}`
+    const uploadId = isProfile ? "profile" : channelId
+    if (!uploadId) {
+      setError("Não foi possível identificar o destino da imagem.")
+      return
+    }
+    const pathname = isProfile
+      ? `tipsters/profile/${assetType}/${crypto.randomUUID()}.${IMAGE_EXTENSION_BY_TYPE[contentType]}`
+      : `channels/${uploadId}/${assetType}/${crypto.randomUUID()}.${IMAGE_EXTENSION_BY_TYPE[contentType]}`
     const clientPayload = JSON.stringify({
-      channelId,
+      context,
+      ...(isProfile ? { tipsterId: uploadId } : { channelId: uploadId }),
       assetType,
       contentType,
       size: file.size,
@@ -70,7 +81,7 @@ export default function ImageUploadField({
     setUploading(true)
     try {
       const tokenResponse = await fetch(
-        `/api/channels/${encodeURIComponent(channelId)}/images`,
+        `/api/channels/${encodeURIComponent(uploadId)}/images`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

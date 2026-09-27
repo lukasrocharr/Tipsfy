@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400">
+<defs>
+  <linearGradient id="g" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0%" stop-color="#00C853"/>
+    <stop offset="100%" stop-color="#00E676"/>
+  </linearGradient>
+</defs>
+
+
+<g transform="translate(60 40)">
+  <path d="M35 35 H300 L270 95 H205 L165 300 Q158 330 130 340 L85 358 L105 275 L125 195 H55 Z" fill="url(#g)"/>
+  <path d="M170 205 L285 90 L265 75 L320 48 L305 108 L287 91 L190 235 Z" fill="url(#g)"/>
+  <path d="M108 275 L128 195 L180 145 L198 168 L145 222 Z" fill="{DARK}" opacity=".18"/>
+</g>
+<text x="405" y="250" font-family="Montserrat, Arial, sans-serif" font-size="190" font-weight="800" fill="#0B0F14">Tips<tspan fill="url(#g)">fy</tspan></text>
+
+</svg>

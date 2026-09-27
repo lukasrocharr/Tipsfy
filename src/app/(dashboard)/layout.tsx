@@ -13,7 +13,11 @@ export default async function DashboardRouteLayout({
 		: null
 
 	return (
-		<DashboardLayout isPro={tipster?.planTier === "PRO"}>
+		<DashboardLayout
+			isPro={tipster?.planTier === "PRO"}
+			profilePhotoUrl={tipster?.profilePhotoUrl}
+			tipsterName={tipster?.name}
+		>
 			{children}
 		</DashboardLayout>
 	)

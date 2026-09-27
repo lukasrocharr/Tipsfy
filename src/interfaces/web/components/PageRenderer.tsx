@@ -17,12 +17,14 @@ export type RenderablePageBlock = PageBlock | PublicPageBlock
 
 export type PageRendererProps = {
   document: PageDocument | PublicPageDocument
-} | { blocks: RenderablePageBlock[] }
+  tipsterAvatarUrl?: string | null
+  appearance?: "editor" | "dark"
+} | { blocks: RenderablePageBlock[]; tipsterAvatarUrl?: string | null; appearance?: "editor" | "dark" }
 
-function renderBlock(block: RenderablePageBlock, key: string) {
+function renderBlock(block: RenderablePageBlock, key: string, tipsterAvatarUrl?: string | null) {
   switch (block.type) {
     case "HERO":
-      return <HeroBlock key={key} block={block} />
+      return <HeroBlock key={key} block={block} tipsterAvatarUrl={tipsterAvatarUrl} />
     case "BIO":
       return <BioBlock key={key} block={block} />
     case "STATS":
@@ -40,22 +42,41 @@ function renderBlock(block: RenderablePageBlock, key: string) {
   }
 }
 
+export function applyPageAppearance(
+  blocks: RenderablePageBlock[],
+  appearance: "editor" | "dark",
+): RenderablePageBlock[] {
+  return appearance === "dark"
+    ? blocks.map(block => ({
+        ...block,
+        style: {
+          ...block.style,
+          backgroundColor: "var(--tipsfy-black)",
+          textColor: "var(--tipsfy-white)",
+          fontFamily: "Montserrat",
+        },
+      }))
+    : blocks
+}
+
 export default function PageRenderer(props: PageRendererProps) {
   // O editor PB-8 e a página pública usam este mesmo renderer: o que o tipster vê editando deve ser exatamente o que o visitante recebe; qualquer divergência é um bug grave de confiança.
   const blocks =
     "document" in props
       ? props.document.blocks as RenderablePageBlock[]
       : props.blocks
+  const tipsterAvatarUrl = props.tipsterAvatarUrl
+  const renderedBlocks = applyPageAppearance(blocks, props.appearance ?? "editor")
 
   return (
     <main className="@container w-full min-w-0">
-      {blocks.map((block, index) => (
+      {renderedBlocks.map((block, index) => (
         <div
           key={`${block.id}-${index}`}
           data-page-block={block.type}
           className="w-full min-w-0"
         >
-          {renderBlock(block, `${block.id}-${index}`)}
+          {renderBlock(block, `${block.id}-${index}`, tipsterAvatarUrl)}
         </div>
       ))}
     </main>

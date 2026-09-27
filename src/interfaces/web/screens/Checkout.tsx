@@ -2,22 +2,47 @@
 
 import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Btn, Card, Input, Select } from '../components/ui'
+import { Check, Copy, LoaderCircle } from 'lucide-react'
+import { Btn, Card, Input } from '../components/ui'
 
 type CheckoutPlan = { name: string; price: number; period: 'monthly' | 'quarterly' | 'annual'; description?: string }
 
 export default function Checkout({ planSlug }: { planSlug: string }) {
   const [plan, setPlan] = useState<CheckoutPlan | null>(null)
-  const [form, setForm] = useState({ name: '', email: '', telegramUserId: '', paymentMethod: 'pix' as 'pix' | 'credit_card' })
+  const [form, setForm] = useState({ name: '', email: '', telegramUserId: '' })
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
   const [pixQrCode, setPixQrCode] = useState('')
   const [deepLinkUrl, setDeepLinkUrl] = useState('')
+  const [paymentId, setPaymentId] = useState('')
+  const [paymentStatus, setPaymentStatus] = useState<'PENDING' | 'PAID' | 'FAILED' | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     void loadPlan()
   }, [planSlug])
+
+  useEffect(() => {
+    if (!paymentId || paymentStatus !== 'PENDING') return
+    let active = true
+    const poll = async () => {
+      try {
+        const response = await fetch(`/api/checkout/payments/${encodeURIComponent(paymentId)}`)
+        if (!response.ok) return
+        const body = await response.json() as { status: 'PENDING' | 'PAID' | 'FAILED' }
+        if (active) setPaymentStatus(body.status)
+      } catch {
+        // Retry on the next interval while the payment remains pending.
+      }
+    }
+    void poll()
+    const interval = window.setInterval(() => void poll(), 3000)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+    }
+  }, [paymentId, paymentStatus])
 
   async function loadPlan() {
     const response = await fetch(`/api/checkout/${planSlug}`)
@@ -36,27 +61,43 @@ export default function Checkout({ planSlug }: { planSlug: string }) {
     setError('')
     setPixQrCode('')
     setDeepLinkUrl('')
+    setPaymentId('')
+    setPaymentStatus(null)
+    setCopied(false)
     setPaying(true)
     const response = await fetch(`/api/checkout/${planSlug}/pay`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, paymentMethod: 'pix' }),
     })
-    const body = await response.json().catch(() => null) as { pixQrCode?: string; checkoutUrl?: string; deepLinkUrl?: string; message?: string } | null
+    const body = await response.json().catch(() => null) as { paymentId?: string; status?: 'PENDING'; pixQrCode?: string; deepLinkUrl?: string; message?: string } | null
     setPaying(false)
     if (!response.ok) {
       setError(body?.message ?? 'Não foi possível iniciar o pagamento.')
       return
     }
+    if (body?.paymentId) {
+      setPaymentId(body.paymentId)
+      setPaymentStatus(body.status ?? 'PENDING')
+    }
     if (body?.deepLinkUrl) setDeepLinkUrl(body.deepLinkUrl)
-    if (form.paymentMethod === 'pix' && body?.pixQrCode) {
+    if (body?.pixQrCode) {
       setPixQrCode(body.pixQrCode)
       return
     }
-    if (body?.checkoutUrl) window.location.assign(body.checkoutUrl)
+    setError('O Mercado Pago não retornou o código Pix para esta cobrança.')
   }
 
-  const update = (key: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm(current => ({ ...current, [key]: event.target.value }))
+  async function copyPixCode() {
+    try {
+      await navigator.clipboard.writeText(pixQrCode)
+      setCopied(true)
+    } catch {
+      setError('Não foi possível copiar o código Pix.')
+    }
+  }
+
+  const update = (key: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement>) => setForm(current => ({ ...current, [key]: event.target.value }))
   const periodLabel = plan?.period === 'monthly' ? 'mês' : plan?.period === 'quarterly' ? 'trimestre' : 'ano'
 
   if (loading) return <main className="min-h-screen bg-[#08080a] flex items-center justify-center text-sm text-zinc-500">Carregando checkout...</main>
@@ -74,14 +115,11 @@ export default function Checkout({ planSlug }: { planSlug: string }) {
             <Input label="Nome completo" value={form.name} onChange={update('name')} placeholder="Seu nome" required />
             <Input label="E-mail" type="email" value={form.email} onChange={update('email')} placeholder="voce@email.com" required />
             <Input label="Telegram (opcional)" value={form.telegramUserId} onChange={update('telegramUserId')} placeholder="@seuusuario ou ID" />
-            <Select label="Forma de pagamento" value={form.paymentMethod} onChange={update('paymentMethod')}>
-              <option value="pix">Pix</option>
-              <option value="credit_card">Cartão de crédito</option>
-            </Select>
+            <div className="rounded-lg border border-emerald-700/50 bg-emerald-950/20 px-3 py-2.5 text-sm text-emerald-300">Pagamento via Pix</div>
             {error && <p className="text-xs text-red-400" role="alert">{error}</p>}
-            <Btn className="w-full" disabled={paying}>{paying ? 'Processando...' : 'Continuar para pagamento →'}</Btn>
+            <Btn className="w-full" disabled={paying}>{paying ? 'Processando...' : 'Assinar agora →'}</Btn>
           </form>
-          {pixQrCode && <div className="mt-6 pt-6 border-t border-[#1e1e24] text-center"><p className="text-sm font-semibold text-zinc-100 mb-4">Escaneie o QR Code Pix</p><div className="inline-flex bg-white p-3 rounded-xl"><QRCodeSVG value={pixQrCode} size={180} /></div><p className="text-xs text-zinc-600 mt-3">A confirmação acontece automaticamente após o pagamento.</p></div>}
+          {pixQrCode && <div className="mt-6 pt-6 border-t border-[#1e1e24] text-center"><p className="text-sm font-semibold text-zinc-100 mb-4">Escaneie o QR Code Pix</p><div className="inline-flex bg-white p-3 rounded-xl"><QRCodeSVG value={pixQrCode} size={180} /></div><label className="mt-4 block text-left text-xs font-medium text-zinc-400">Pix copia e cola<textarea readOnly value={pixQrCode} rows={3} className="mt-1.5 w-full resize-none rounded-lg border border-[#303036] bg-[#111114] p-3 font-mono text-xs text-zinc-300" /></label><button type="button" onClick={() => void copyPixCode()} className="mt-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 text-sm font-semibold text-[#0B0F14] hover:bg-emerald-400">{copied ? <Check size={16} /> : <Copy size={16} />}{copied ? 'Copiado' : 'Copiar código Pix'}</button><div className="mt-4 flex items-center justify-center gap-2 text-sm" role="status">{paymentStatus === 'PENDING' && <><LoaderCircle size={15} className="animate-spin text-amber-300" /><span className="text-amber-200">Aguardando pagamento</span></>}{paymentStatus === 'PAID' && <><Check size={16} className="text-emerald-400" /><span className="text-emerald-300">Pagamento confirmado</span></>}{paymentStatus === 'FAILED' && <span className="text-red-300">Pagamento não aprovado. Inicie uma nova tentativa.</span>}</div></div>}
           {deepLinkUrl && <div className="mt-6 pt-6 border-t border-[#1e1e24] text-center"><p className="text-sm font-semibold text-zinc-100 mb-4">Vincule o Telegram para receber o acesso</p><a href={deepLinkUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-emerald-400">Abrir Telegram e confirmar acesso</a><p className="text-xs text-zinc-600 mt-3">Se o botão não abrir, use este link manualmente: <span className="break-all font-mono text-zinc-400">{deepLinkUrl}</span></p></div>}
         </Card>
         <Card className="p-6 lg:col-span-2 lg:sticky lg:top-8">

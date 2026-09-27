@@ -492,7 +492,6 @@ export default function PageBuilderEditor({
             <BlockPalette onAdd={addBlock} />
             <BlockPropertiesPanel
               block={selectedBlock}
-              globalTheme={document.globalTheme}
               channelId={channelId}
               onChange={updateBlock}
               onRemove={removeBlock}

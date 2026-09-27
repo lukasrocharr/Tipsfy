@@ -105,7 +105,7 @@ class PaymentRepositoryFake implements PaymentRepository {
 
 class PaymentGatewayFake implements PaymentGateway {
   async criarCobrancaPix(): Promise<{ gatewayTxId: string; pixQrCode: string }> { return { gatewayTxId: 'tx-1', pixQrCode: 'pix-code' } }
-  async criarCobrancaCartao(): Promise<{ gatewayTxId: string; checkoutUrl: string }> { return { gatewayTxId: 'tx-1', checkoutUrl: 'https://checkout.test' } }
+  async consultarStatus(): Promise<'PENDING'> { return 'PENDING' }
 }
 
 describe('IniciarCheckoutUseCase', () => {

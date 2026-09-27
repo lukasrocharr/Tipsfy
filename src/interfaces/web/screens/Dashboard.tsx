@@ -6,8 +6,8 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import { calcROI } from '../data'
 import { useDashboardSummary } from '../hooks/useDashboardSummary'
 import { useNotifications } from '../hooks/useNotifications'
-import { MetricCard, Badge, Avatar, Card } from '../components/ui'
-import { Bell, ChevronRight } from 'lucide-react'
+import { MetricCard, Badge, Avatar, Card, Btn, Input } from '../components/ui'
+import { Bell, ChevronRight, Link2, X } from 'lucide-react'
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload?.length) {
@@ -24,6 +24,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function Dashboard() {
   const router = useRouter()
   const [notifOpen, setNotifOpen] = useState(false)
+  const [connectChannelOpen, setConnectChannelOpen] = useState(false)
+  const [channelName, setChannelName] = useState('')
+  const [channelChatId, setChannelChatId] = useState('')
+  const [channelBotToken, setChannelBotToken] = useState('')
+  const [pendingChannel, setPendingChannel] = useState<{ id: string; chatId: string } | null>(null)
+  const [channelError, setChannelError] = useState('')
+  const [connectingChannel, setConnectingChannel] = useState(false)
   const summary = useDashboardSummary()
   const notificationsHook = useNotifications()
 
@@ -42,15 +49,69 @@ export default function Dashboard() {
     status: (sub.status === 'ACTIVE' ? 'active' : sub.status === 'PAST_DUE' || sub.status === 'FAILED' ? 'delinquent' : sub.status === 'CANCELLED' ? 'cancelled' : 'trial') as 'active' | 'delinquent' | 'cancelled' | 'trial',
   }))
 
+  async function connectNewChannel(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setChannelError('')
+    setConnectingChannel(true)
+    try {
+      let channel = pendingChannel
+      if (!channel) {
+        const createResponse = await fetch('/api/channels', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: channelName.trim(),
+            telegramChatId: channelChatId.trim(),
+            botTokenEnc: null,
+          }),
+        })
+        const createBody = await createResponse.json().catch(() => null) as { channel?: { id: string }; message?: string } | null
+        if (!createResponse.ok || !createBody?.channel) {
+          throw new Error(createBody?.message ?? 'Não foi possível criar o canal.')
+        }
+        channel = { id: createBody.channel.id, chatId: channelChatId.trim() }
+        setPendingChannel(channel)
+      }
+
+      const connectResponse = await fetch(`/api/channels/${encodeURIComponent(channel.id)}/connect-bot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: channelBotToken, chatId: channel.chatId }),
+      })
+      const connectBody = await connectResponse.json().catch(() => null) as { message?: string } | null
+      if (!connectResponse.ok) {
+        throw new Error(connectBody?.message ?? 'O canal foi criado, mas não foi possível conectar o bot.')
+      }
+
+      setConnectChannelOpen(false)
+      setChannelName('')
+      setChannelChatId('')
+      setChannelBotToken('')
+      setPendingChannel(null)
+    } catch (error) {
+      setChannelError(error instanceof Error ? error.message : 'Não foi possível conectar o canal.')
+    } finally {
+      setConnectingChannel(false)
+    }
+  }
+
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 lg:px-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-semibold text-zinc-100">Dashboard</h1>
           <p className="text-sm text-zinc-500 mt-0.5">Visão geral do seu negócio • setembro 2026</p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setChannelError(''); setConnectChannelOpen(true) }}
+            aria-label="Conectar novo canal"
+            className="border border-[#303036] hover:border-emerald-500/50 text-zinc-300 hover:text-zinc-100 font-medium px-3 py-2 rounded-lg transition-colors text-sm flex items-center gap-2"
+          >
+            <Link2 size={16} className="text-current" />
+            Conectar novo canal
+          </button>
           {/* Notifications */}
           <div className="relative">
             <button onClick={() => setNotifOpen(!notifOpen)} className="relative w-9 h-9 rounded-lg bg-[#18181c] border border-[#1e1e24] flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-all">
@@ -116,14 +177,14 @@ export default function Dashboard() {
             <AreaChart data={mrrHistory} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--tipsfy-green)" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="var(--tipsfy-green)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="month" tick={{ fill: '#52525b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#52525b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `R$${v}`} />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#1e1e24', strokeWidth: 1 }} />
-              <Area type="monotone" dataKey="mrr" stroke="#10b981" strokeWidth={2} fill="url(#mrrGrad)" dot={false} activeDot={{ r: 4, fill: '#10b981', strokeWidth: 0 }} />
+              <XAxis dataKey="month" tick={{ fill: 'var(--tipsfy-gray)', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'var(--tipsfy-gray)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `R$${v}`} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--tipsfy-border)', strokeWidth: 1 }} />
+              <Area type="monotone" dataKey="mrr" stroke="var(--tipsfy-green)" strokeWidth={2} fill="url(#mrrGrad)" dot={false} activeDot={{ r: 4, fill: 'var(--tipsfy-green)', strokeWidth: 0 }} />
             </AreaChart>
           </ResponsiveContainer>
         </Card>
@@ -235,6 +296,37 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {connectChannelOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="presentation">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="connect-channel-title"
+            className="w-full max-w-md rounded-xl border border-[#303036] bg-[#0B0F14] p-6 shadow-2xl"
+          >
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 id="connect-channel-title" className="text-lg font-semibold text-zinc-100">Conectar novo canal</h2>
+              <button type="button" onClick={() => setConnectChannelOpen(false)} aria-label="Fechar" className="text-zinc-500 hover:text-zinc-200">
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={event => void connectNewChannel(event)} className="space-y-4">
+              <Input label="Nome do canal" value={channelName} onChange={event => setChannelName(event.target.value)} disabled={Boolean(pendingChannel)} required />
+              <Input label="ID ou link do canal Telegram" value={channelChatId} onChange={event => setChannelChatId(event.target.value)} placeholder="@SeuCanal ou -100..." disabled={Boolean(pendingChannel)} required />
+              <Input label="Token do bot Telegram" type="password" value={channelBotToken} onChange={event => setChannelBotToken(event.target.value)} required />
+              {pendingChannel && <p className="text-xs text-amber-300">O canal foi criado. Conecte o bot para concluir.</p>}
+              {channelError && <p className="text-sm text-red-400" role="alert">{channelError}</p>}
+              <div className="flex justify-end gap-2 pt-1">
+                <Btn type="button" variant="secondary" onClick={() => setConnectChannelOpen(false)}>Cancelar</Btn>
+                <Btn type="submit" disabled={connectingChannel}>
+                  {connectingChannel ? 'Conectando...' : 'Conectar canal'}
+                </Btn>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   )
 }

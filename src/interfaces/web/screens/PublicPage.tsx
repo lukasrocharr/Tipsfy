@@ -42,7 +42,7 @@ export default function PublicPage() {
 
   return (
     <div className="min-h-dvh w-full min-w-0 bg-[#08080a]">
-      <PageRenderer document={data.pageDocument} />
+      <PageRenderer document={data.pageDocument} tipsterAvatarUrl={data.tipsterAvatarUrl} appearance="dark" />
     </div>
   )
 }

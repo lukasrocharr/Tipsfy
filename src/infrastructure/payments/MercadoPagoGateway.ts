@@ -1,10 +1,11 @@
-import type { GatewayPaymentInput, GatewayPaymentResult, PaymentGateway } from '../../application/ports/PaymentGateway'
+import type { GatewayPaymentInput, GatewayPaymentResult, GatewayPaymentStatus, PaymentGateway } from '../../application/ports/PaymentGateway'
 
 const MERCADO_PAGO_API = 'https://api.mercadopago.com'
 
 type MercadoPagoResponse = {
   id?: string | number
   init_point?: string
+  status?: string
   point_of_interaction?: { transaction_data?: { qr_code?: string } }
 }
 
@@ -26,17 +27,13 @@ export class MercadoPagoGateway implements PaymentGateway {
     return { gatewayTxId: String(response.id), pixQrCode: response.point_of_interaction?.transaction_data?.qr_code }
   }
 
-  async criarCobrancaCartao(input: GatewayPaymentInput): Promise<GatewayPaymentResult> {
-    const response = await this.request<MercadoPagoResponse>('/checkout/preferences', {
-      method: 'POST',
-      headers: { 'X-Idempotency-Key': input.paymentId },
-      body: JSON.stringify({
-        items: [{ id: input.paymentId, title: input.description, quantity: 1, currency_id: 'BRL', unit_price: input.amount }],
-        payer: { email: input.email },
-        external_reference: input.paymentId,
-      }),
+  async consultarStatus(gatewayTxId: string): Promise<GatewayPaymentStatus> {
+    const response = await this.request<MercadoPagoResponse>(`/v1/payments/${encodeURIComponent(gatewayTxId)}`, {
+      method: 'GET',
     })
-    return { gatewayTxId: String(response.id), checkoutUrl: response.init_point }
+    if (response.status === 'approved') return 'PAID'
+    if (['rejected', 'cancelled', 'refunded', 'charged_back'].includes(response.status ?? '')) return 'FAILED'
+    return 'PENDING'
   }
 
   private async request<T>(path: string, options: RequestInit): Promise<T> {

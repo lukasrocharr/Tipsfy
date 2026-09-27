@@ -28,5 +28,6 @@ export function checkoutUseCasesFactory() {
   return {
     iniciar: new IniciarCheckoutUseCase(planRepository, subscriberRepository, subscriptionRepository, paymentRepository, paymentGateway),
     confirmar: new ConfirmarPagamentoUseCase(paymentRepository, subscriptionRepository, liberarAcessoAoCanalUseCase),
+    paymentGateway,
   }
 }

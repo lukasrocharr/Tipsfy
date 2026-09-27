@@ -19,6 +19,7 @@ export class PrismaTipsterRepository implements TipsterRepository {
         name: tipster.name,
         bio: tipster.bio,
         website: tipster.website,
+        profilePhotoUrl: tipster.profilePhotoUrl,
         notificationPreferences: tipster.notificationPreferences,
         bankDetails: tipster.bankDetails ?? Prisma.DbNull,
         deletedAt: tipster.deletedAt,
@@ -38,6 +39,7 @@ export class PrismaTipsterRepository implements TipsterRepository {
         name: tipster.name,
         bio: tipster.bio,
         website: tipster.website,
+        profilePhotoUrl: tipster.profilePhotoUrl,
         notificationPreferences: tipster.notificationPreferences,
         bankDetails: tipster.bankDetails ?? Prisma.DbNull,
         deletedAt: tipster.deletedAt,
@@ -70,6 +72,7 @@ export class PrismaTipsterRepository implements TipsterRepository {
     name?: string | null
     bio?: string | null
     website?: string | null
+    profilePhotoUrl?: string | null
     notificationPreferences?: any
     bankDetails?: any
     deletedAt?: Date | null
@@ -95,6 +98,7 @@ export class PrismaTipsterRepository implements TipsterRepository {
       record.bankDetails ?? null,
       record.deletedAt ?? null,
       record.deletionReason ?? null,
+      record.profilePhotoUrl ?? null,
     )
   }
 }

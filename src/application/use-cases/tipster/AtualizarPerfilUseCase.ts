@@ -7,6 +7,7 @@ export type AtualizarPerfilInput = {
   email?: string
   bio?: string
   website?: string
+  profilePhotoUrl?: string | null
 }
 
 export class AtualizarPerfilUseCase {
@@ -29,6 +30,9 @@ export class AtualizarPerfilUseCase {
       current.bankDetails,
       current.deletedAt,
       current.deletionReason,
+      input.profilePhotoUrl === undefined
+        ? current.profilePhotoUrl
+        : input.profilePhotoUrl || null,
     )
 
     if (this.repository.atualizar) await this.repository.atualizar(next)

@@ -7,6 +7,7 @@ export type SettingsProfilePayload = {
   email?: string
   bio?: string
   website?: string
+  profilePhotoUrl?: string | null
 }
 
 export type NotificationPreferencesPayload = {

@@ -97,7 +97,7 @@ function SortableBlock({
         inert
         className="pointer-events-none min-w-0 select-none"
       >
-        <PageRenderer blocks={[previewBlock]} />
+        <PageRenderer blocks={[previewBlock]} appearance="dark" />
       </div>
     </article>
   )

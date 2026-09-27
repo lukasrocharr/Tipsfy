@@ -5,7 +5,10 @@ import { WebhookJaProcessadoError } from '../../../domain/errors/WebhookJaProces
 import { checkoutUseCasesFactory } from '../../../infrastructure/factories/checkoutUseCaseFactory'
 import { validarAssinaturaMercadoPago } from './mercadoPagoSignature'
 
-const webhookSchema = z.object({ gatewayTxId: z.string().min(1), status: z.enum(['PAID', 'FAILED']) })
+const webhookSchema = z.object({
+  type: z.string().optional(),
+  data: z.object({ id: z.union([z.string().min(1), z.number().int().positive()]) }),
+})
 
 export async function POST(request: Request) {
   const rawBody = await request.text()
@@ -20,8 +23,14 @@ export async function POST(request: Request) {
   }
   const parsed = webhookSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ message: 'Webhook inválido.' }, { status: 400 })
+  if (parsed.data.type && parsed.data.type !== 'payment') {
+    return NextResponse.json({ received: true })
+  }
+  const gatewayTxId = String(parsed.data.data.id)
   try {
-    await checkoutUseCasesFactory().confirmar.execute(parsed.data)
+    const { confirmar, paymentGateway } = checkoutUseCasesFactory()
+    const status = await paymentGateway.consultarStatus(gatewayTxId)
+    if (status !== 'PENDING') await confirmar.execute({ gatewayTxId, status })
     return NextResponse.json({ received: true })
   } catch (error) {
     if (error instanceof WebhookJaProcessadoError) return NextResponse.json({ received: true })

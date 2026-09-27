@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import type { Plan, PlanPeriod } from '../data'
 import { Card, Btn, Input, SectionHeader } from '../components/ui'
 import { usePlans } from '../hooks/usePlans'
-import { Check, CircleCheck, Copy, Pencil, Trash2 } from 'lucide-react'
+import { Check, CircleCheck, Copy, Pencil, QrCode, Trash2 } from 'lucide-react'
 
 const PERIOD_LABEL: Record<PlanPeriod, string> = { monthly: 'Mensal', quarterly: 'Trimestral', annual: 'Anual' }
 const PERIOD_BADGE: Record<PlanPeriod, string> = { monthly: '', quarterly: '16% off', annual: '33% off' }
@@ -59,19 +59,12 @@ function CheckoutPreview({ plan }: { plan: Partial<Plan> }) {
         ))}
       </div>
 
-      {/* Payment method tabs */}
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {[{ id: 'pix', label: 'Pix', icon: '⚡', sub: 'Instantâneo' }, { id: 'card', label: 'Cartão', icon: '💳', sub: 'Crédito/Débito' }].map((m, i) => (
-          <div key={m.id} className={`rounded-lg p-2.5 border cursor-pointer transition-all ${i === 0 ? 'border-emerald-500/40 bg-emerald-950/20' : 'border-[#1e1e24] bg-[#18181c]'}`}>
-            <div className="flex items-center gap-2">
-              <span className="text-base leading-none">{m.icon}</span>
-              <div>
-                <p className="text-xs font-semibold text-zinc-200">{m.label}</p>
-                <p className="text-[10px] text-zinc-600">{m.sub}</p>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="mb-4 flex items-center gap-3 rounded-lg border border-emerald-700/40 bg-emerald-950/20 p-3">
+        <QrCode size={20} className="text-emerald-300" aria-hidden="true" />
+        <div>
+          <p className="text-xs font-semibold text-zinc-200">Pix</p>
+          <p className="text-[10px] text-zinc-500">Pagamento instantâneo</p>
+        </div>
       </div>
 
       <button className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-emerald-500/20">

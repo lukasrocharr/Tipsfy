@@ -4,6 +4,7 @@ import type { TipsterRepository } from '../../src/application/ports/TipsterRepos
 import { CriarCanalUseCase } from '../../src/application/use-cases/channels/CriarCanalUseCase'
 import { Channel } from '../../src/domain/entities/Channel'
 import { Tipster } from '../../src/domain/entities/Tipster'
+import { LimiteDeCanaisExcedidoError } from '../../src/domain/errors/LimiteDeCanaisExcedidoError'
 
 class ChannelRepositoryFake implements ChannelRepository {
   readonly channels: Channel[] = []
@@ -42,12 +43,12 @@ class TipsterRepositoryFake implements TipsterRepository {
   }
 }
 
-function createUseCase(channelRepository: ChannelRepositoryFake) {
+function createUseCase(channelRepository: ChannelRepositoryFake, planTier: 'STARTER' | 'PRO' = 'PRO') {
   const tipster = new Tipster(
     'tipster-1',
     'pro@tipsfy.io',
     'hash',
-    'PRO',
+    planTier,
     new Date(),
   )
   return new CriarCanalUseCase(
@@ -57,6 +58,33 @@ function createUseCase(channelRepository: ChannelRepositoryFake) {
 }
 
 describe('CriarCanalUseCase public slug', () => {
+  it('allows a Pro account to create more than one channel', async () => {
+    const channels = new ChannelRepositoryFake()
+    channels.channels.push(new Channel('existing-1', 'tipster-1', '-1001', null, 'First', 'first'))
+
+    const created = await createUseCase(channels).execute({
+      tipsterId: 'tipster-1',
+      telegramChatId: '-1002',
+      botTokenEnc: null,
+      name: 'Second',
+    })
+
+    expect(created.name).toBe('Second')
+    expect(channels.channels).toHaveLength(2)
+  })
+
+  it('keeps Starter accounts limited to one channel', async () => {
+    const channels = new ChannelRepositoryFake()
+    channels.channels.push(new Channel('existing-1', 'tipster-1', '-1001', null, 'First', 'first'))
+
+    await expect(createUseCase(channels, 'STARTER').execute({
+      tipsterId: 'tipster-1',
+      telegramChatId: '-1002',
+      botTokenEnc: null,
+      name: 'Second',
+    })).rejects.toBeInstanceOf(LimiteDeCanaisExcedidoError)
+  })
+
   it('transliterates the channel name into a normalized public slug', async () => {
     const channels = new ChannelRepositoryFake()
     const created = await createUseCase(channels).execute({

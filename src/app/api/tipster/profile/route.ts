@@ -1,1 +1,1 @@
-export { PATCH } from '../../../../interfaces/http/tipster/profile'
+export { GET, PATCH } from '../../../../interfaces/http/tipster/profile'

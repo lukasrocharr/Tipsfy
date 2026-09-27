@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="320" viewBox="0 0 900 320">
+<defs>
+  <linearGradient id="g" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0%" stop-color="#00C853"/>
+    <stop offset="100%" stop-color="#00E676"/>
+  </linearGradient>
+</defs>
+
+<text x="40" y="250" font-family="Montserrat, Arial, sans-serif" font-size="190" font-weight="800" fill="#0B0F14">Tips<tspan fill="url(#g)">fy</tspan></text>
+</svg>

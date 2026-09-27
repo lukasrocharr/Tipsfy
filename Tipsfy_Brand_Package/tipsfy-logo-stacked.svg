@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500">
+<defs>
+  <linearGradient id="g" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0%" stop-color="#00C853"/>
+    <stop offset="100%" stop-color="#00E676"/>
+  </linearGradient>
+</defs>
+
+
+<g transform="translate(300 20) scale(.75)"><path d="M35 35 H300 L270 95 H205 L165 300 Q158 330 130 340 L85 358 L105 275 L125 195 H55 Z" fill="url(#g)"/><path d="M170 205 L285 90 L265 75 L320 48 L305 108 L287 91 L190 235 Z" fill="url(#g)"/></g>
+<text x="600" y="330" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="150" font-weight="800" fill="#0B0F14">Tips<tspan fill="url(#g)">fy</tspan></text>
+
+</svg>

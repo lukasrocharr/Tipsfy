@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge, Avatar, Card, Btn, EmptyState, SectionHeader } from '../components/ui'
+import { Badge, Avatar, Card, EmptyState, SectionHeader } from '../components/ui'
 import { useSubscribers } from '../hooks/useSubscribers'
-import { Ban, CircleCheck, Pencil, Plus, Search, Send, Trash2, Users, X } from 'lucide-react'
+import { Ban, CircleCheck, Pencil, Search, Send, Trash2, Users, X } from 'lucide-react'
 
 export type SubscriberStatus = 'active' | 'delinquent' | 'cancelled' | 'trial'
 
@@ -136,12 +136,6 @@ export default function Subscribers() {
       <SectionHeader
         title="Assinantes"
         sub="Gerencie todos os membros do seu canal."
-        action={
-          <Btn size="sm">
-            <Plus size={16} className="text-current" />
-            Adicionar manual
-          </Btn>
-        }
       />
 
       {/* Summary row */}

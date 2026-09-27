@@ -75,7 +75,7 @@ export default function PlansBlock({ block }: { block: BlockOfType<"PLANS"> }) {
             </p>
             <Link
               href={`/checkout/${encodeURIComponent(plan.checkoutSlug)}`}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-current/30 px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-emerald-500/40 bg-emerald-950/30 px-4 py-2 text-sm font-semibold text-emerald-400 transition-colors hover:bg-emerald-950/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               Assinar
             </Link>

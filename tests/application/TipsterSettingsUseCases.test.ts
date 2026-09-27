@@ -56,6 +56,24 @@ describe('Tipster settings use cases', () => {
     expect(result.website).toBe('https://rafael.dev')
   })
 
+  it('persiste e preserva a foto de perfil', async () => {
+    const tipster = new Tipster('t1', 'rafael@tipsfy.io', 'hash', 'PRO', new Date())
+    const repository = new TipsterRepositoryFake([tipster])
+    const profilePhotoUrl = 'https://blob.example/avatar.webp'
+
+    const updated = await new AtualizarPerfilUseCase(repository).execute({
+      tipsterId: 't1',
+      profilePhotoUrl,
+    })
+    const preserved = await new AtualizarPerfilUseCase(repository).execute({
+      tipsterId: 't1',
+      bio: 'Atualizada',
+    })
+
+    expect(updated.profilePhotoUrl).toBe(profilePhotoUrl)
+    expect(preserved.profilePhotoUrl).toBe(profilePhotoUrl)
+  })
+
   it('atualiza preferências de notificação como JSON simples no tipster', async () => {
     const tipster = new Tipster('t1', 'rafael@tipsfy.io', 'hash', 'PRO', new Date())
     const repository = new TipsterRepositoryFake([tipster])

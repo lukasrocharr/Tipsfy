@@ -4,7 +4,7 @@
  */
 import { randomUUID } from 'node:crypto'
 import { Periodicity } from '../../../domain/value-objects/Periodicity'
-import { Payment, type PaymentMethod } from '../../../domain/entities/Payment'
+import { Payment } from '../../../domain/entities/Payment'
 import { Subscriber } from '../../../domain/entities/Subscriber'
 import { Subscription } from '../../../domain/entities/Subscription'
 import type { PaymentGateway } from '../../ports/PaymentGateway'
@@ -14,7 +14,7 @@ import type { SubscriberRepository } from '../../ports/SubscriberRepository'
 import type { SubscriptionRepository } from '../../ports/SubscriptionRepository'
 import { LimiteDeAssinantesExcedidoError } from '../../../domain/errors/LimiteDeAssinantesExcedidoError'
 
-export type IniciarCheckoutInput = { planSlug: string; name: string; email: string; telegramUserId?: string; paymentMethod: PaymentMethod }
+export type IniciarCheckoutInput = { planSlug: string; name: string; email: string; telegramUserId?: string; paymentMethod: 'pix' }
 export type IniciarCheckoutOutput = { paymentId: string; subscriptionId: string; status: 'PENDING'; pixQrCode: string | null; checkoutUrl: string | null; deepLinkUrl: string | null }
 
 export class IniciarCheckoutUseCase {
@@ -37,12 +37,10 @@ export class IniciarCheckoutUseCase {
     const dueDate = new Periodicity(plan.period).proximaDataDeVencimento(new Date())
     const subscription = new Subscription(randomUUID(), subscriber.id, plan.id, 'PENDING', dueDate)
     await this.subscriptionRepository.salvar(subscription)
-    const payment = new Payment(randomUUID(), subscription.id, plan.price, input.paymentMethod, 'PENDING')
+    const payment = new Payment(randomUUID(), subscription.id, plan.price, 'pix', 'PENDING')
     await this.paymentRepository.salvar(payment)
     const gatewayInput = { paymentId: payment.id, amount: plan.price, email: input.email, description: plan.name, method: input.paymentMethod }
-    const gatewayResult = input.paymentMethod === 'pix'
-      ? await this.paymentGateway.criarCobrancaPix(gatewayInput)
-      : await this.paymentGateway.criarCobrancaCartao(gatewayInput)
+    const gatewayResult = await this.paymentGateway.criarCobrancaPix(gatewayInput)
     await this.paymentRepository.atualizarResultado(payment.id, 'PENDING', gatewayResult.gatewayTxId)
 
     const deepLinkToken = subscriber.pendingLinkToken ?? randomUUID().replace(/-/g, '').slice(0, 32)

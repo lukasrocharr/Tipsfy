@@ -6,7 +6,7 @@ const paySchema = z.object({
   name: z.string().trim().min(2),
   email: z.string().trim().toLowerCase().email(),
   telegramUserId: z.string().trim().optional(),
-  paymentMethod: z.enum(['pix', 'credit_card']),
+  paymentMethod: z.literal('pix'),
 })
 
 export async function POST(request: Request, context: { params: Promise<{ planSlug: string }> }) {

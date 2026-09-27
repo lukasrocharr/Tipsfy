@@ -45,6 +45,7 @@ export class Tipster {
     public readonly bankDetails: BankDetails | null = null,
     public readonly deletedAt: Date | null = null,
     public readonly deletionReason: string | null = null,
+    public readonly profilePhotoUrl: string | null = null,
   ) {}
 
   withoutPassword(): TipsterPublic {

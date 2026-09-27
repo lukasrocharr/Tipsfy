@@ -38,6 +38,7 @@ export type PublicPerformanceResult = {
   pageStatus: "configured" | "not-configured"
   pageDocument: PublicPageDocument | null
   channelName: string
+  tipsterAvatarUrl: string | null
   stats: ChannelStatistics
   recentTips: Array<{
     id: string
@@ -138,6 +139,7 @@ export class ObterPerformancePublicaUseCase {
       pageStatus: publicPageDocument ? "configured" : "not-configured",
       pageDocument: publicPageDocument,
       channelName: channel.name,
+      tipsterAvatarUrl: tipster.profilePhotoUrl,
       stats,
       recentTips,
     }

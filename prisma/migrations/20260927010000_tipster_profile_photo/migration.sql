@@ -1,0 +1,1 @@
+ALTER TABLE "tipsters" ADD COLUMN "profilePhotoUrl" TEXT;

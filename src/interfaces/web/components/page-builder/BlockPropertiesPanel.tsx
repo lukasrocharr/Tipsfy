@@ -1,11 +1,4 @@
 import { AlignCenter, AlignLeft, AlignRight, Plus, Trash2 } from "lucide-react"
-import {
-  PALETAS_CURADAS,
-  PAREAMENTOS_DE_FONTES,
-  type FontPairingId,
-  type PrimaryColorId,
-} from "../../../../domain/value-objects/CatalogoDeEstilo"
-import type { GlobalTheme } from "../../../../domain/entities/PageDocument"
 import type {
   PageBlock,
   PageBlockStyle,
@@ -49,30 +42,18 @@ function updateBlockContent(
   }
 }
 
-function fontForBlock(
-  pairingId: FontPairingId,
-  block: PageBlock,
-): PageBlockStyle["fontFamily"] {
-  const pairing = PAREAMENTOS_DE_FONTES[pairingId]
-  return block.type === "HERO" || block.type === "CUSTOM_TEXT"
-    ? pairing.heading
-    : pairing.body
-}
-
 export default function BlockPropertiesPanel({
   block,
-  globalTheme,
   channelId,
   onChange,
   onRemove,
 }: {
   block: PageBlock | null
-  globalTheme: GlobalTheme | null
   channelId: string
-  onChange: (block: PageBlock, theme?: GlobalTheme) => void
+  onChange: (block: PageBlock) => void
   onRemove: (blockId: string) => void
 }) {
-  if (!block || !globalTheme) {
+  if (!block) {
     return (
       <aside
         className="min-w-0 rounded-xl border border-[#1e1e24] bg-[#0c0c0f] p-4"
@@ -89,39 +70,8 @@ export default function BlockPropertiesPanel({
   }
 
   const selectedBlock = block
-  const selectedTheme = globalTheme
   const setText = (field: string, value: string) =>
     onChange(updateBlockContent(block, field, value))
-  const paletteIds = Object.keys(PALETAS_CURADAS) as PrimaryColorId[]
-  const pairingIds = Object.keys(PAREAMENTOS_DE_FONTES) as FontPairingId[]
-
-  function choosePalette(primaryColorId: PrimaryColorId) {
-    const palette = PALETAS_CURADAS[primaryColorId]
-    onChange(
-      {
-        ...selectedBlock,
-        style: {
-          ...selectedBlock.style,
-          backgroundColor: palette.primary,
-          textColor: palette.onPrimary,
-        },
-      },
-      { ...selectedTheme, primaryColorId },
-    )
-  }
-
-  function choosePairing(fontPairingId: FontPairingId) {
-    onChange(
-      {
-        ...selectedBlock,
-        style: {
-          ...selectedBlock.style,
-          fontFamily: fontForBlock(fontPairingId, selectedBlock),
-        },
-      },
-      { ...selectedTheme, fontPairingId },
-    )
-  }
 
   function updateStyle(style: Partial<PageBlockStyle>) {
     onChange({ ...selectedBlock, style: { ...selectedBlock.style, ...style } })
@@ -356,83 +306,6 @@ export default function BlockPropertiesPanel({
           >
             Estilo
           </h3>
-
-          <fieldset>
-            <legend className="mb-2 text-xs font-medium text-zinc-400">
-              Paleta
-            </legend>
-            <div className="grid grid-cols-2 gap-2">
-              {paletteIds.map((paletteId) => {
-                const palette = PALETAS_CURADAS[paletteId]
-                const selected = globalTheme.primaryColorId === paletteId
-                return (
-                  <button
-                    key={paletteId}
-                    type="button"
-                    aria-label={`Aplicar paleta ${paletteId.replace(/-/g, " ")}`}
-                    aria-pressed={selected}
-                    onClick={() => choosePalette(paletteId)}
-                    className={`min-h-12 min-w-0 rounded-lg border p-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ${
-                      selected
-                        ? "border-emerald-500 bg-emerald-950/20"
-                        : "border-[#27272a] bg-[#111114] hover:border-zinc-500"
-                    }`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="mb-1 flex h-4 overflow-hidden rounded-sm"
-                    >
-                      <span
-                        className="flex-1"
-                        style={{ backgroundColor: palette.primary }}
-                      />
-                      <span
-                        className="flex-1"
-                        style={{ backgroundColor: palette.secondary }}
-                      />
-                      <span
-                        className="flex-1"
-                        style={{ backgroundColor: palette.accent }}
-                      />
-                    </span>
-                    <span className="block truncate text-[10px] capitalize text-zinc-300">
-                      {paletteId.replace(/-/g, " ")}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </fieldset>
-
-          <Field label="Pareamento tipográfico">
-            <select
-              className={FIELD_CLASS}
-              value={globalTheme.fontPairingId}
-              onChange={(event) => {
-                const fontPairingId = event.target.value as FontPairingId
-                onChange(
-                  {
-                    ...block,
-                    style: {
-                      ...block.style,
-                      fontFamily: fontForBlock(fontPairingId, block),
-                    },
-                  },
-                  { ...globalTheme, fontPairingId },
-                )
-              }}
-            >
-              {pairingIds.map((fontPairingId) => {
-                const pairing = PAREAMENTOS_DE_FONTES[fontPairingId]
-                return (
-                  <option key={fontPairingId} value={fontPairingId}>
-                    {fontPairingId.replace(/-/g, " ")} · {pairing.heading} /{" "}
-                    {pairing.body}
-                  </option>
-                )
-              })}
-            </select>
-          </Field>
 
           <fieldset>
             <legend className="mb-2 text-xs font-medium text-zinc-400">

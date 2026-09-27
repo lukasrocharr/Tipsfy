@@ -97,6 +97,7 @@ export const FONT_FAMILIES_CURADAS = [
   "Poppins",
   "Open Sans",
   "Outfit",
+  "Montserrat",
 ] as const
 
 export type PrimaryColorId = keyof typeof PALETAS_CURADAS

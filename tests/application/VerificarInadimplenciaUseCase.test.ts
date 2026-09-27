@@ -57,10 +57,7 @@ class PaymentGatewayFake implements PaymentGateway {
     if (this.shouldFail) throw new Error('gateway timeout')
     return { gatewayTxId: 'new-tx', pixQrCode: 'pix-code' }
   }
-  async criarCobrancaCartao(): Promise<{ gatewayTxId: string; checkoutUrl: string }> {
-    if (this.shouldFail) throw new Error('gateway timeout')
-    return { gatewayTxId: 'new-tx', checkoutUrl: 'https://checkout.test' }
-  }
+  async consultarStatus(): Promise<'PENDING'> { return 'PENDING' }
 }
 
 class ChannelRepositoryFake implements ChannelRepository {

@@ -422,12 +422,12 @@ export default function Tips() {
           <p className="text-xs text-zinc-600 mb-5">Últimos 3 meses</p>
           <ResponsiveContainer width="100%" height={140}>
             <BarChart data={monthlyData} barSize={32}>
-              <XAxis dataKey="month" tick={{ fill: '#52525b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#52525b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v > 0 ? '+' : ''}${v}u`} />
-              <Tooltip formatter={(v) => [`${Number(v) > 0 ? '+' : ''}${Number(v).toFixed(2)}u`, 'Lucro']} contentStyle={{ background: '#18181c', border: '1px solid #1e1e24', borderRadius: 8, fontSize: 12 }} labelStyle={{ color: '#71717a' }} itemStyle={{ color: '#10b981' }} cursor={{ fill: 'rgba(16,185,129,0.05)' }} />
+              <XAxis dataKey="month" tick={{ fill: 'var(--tipsfy-gray)', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'var(--tipsfy-gray)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v > 0 ? '+' : ''}${v}u`} />
+              <Tooltip formatter={(v) => [`${Number(v) > 0 ? '+' : ''}${Number(v).toFixed(2)}u`, 'Lucro']} contentStyle={{ background: 'var(--tipsfy-dark)', border: '1px solid var(--tipsfy-border)', borderRadius: 8, fontSize: 12 }} labelStyle={{ color: 'var(--tipsfy-gray)' }} itemStyle={{ color: 'var(--tipsfy-green)' }} cursor={{ fill: 'rgba(0,230,118,0.05)' }} />
               <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
                 {monthlyData.map((entry, i) => (
-                  <Cell key={i} fill={entry.profit >= 0 ? '#10b981' : '#ef4444'} fillOpacity={0.8} />
+                  <Cell key={i} fill={entry.profit >= 0 ? 'var(--tipsfy-green)' : '#ef4444'} fillOpacity={0.8} />
                 ))}
               </Bar>
             </BarChart>

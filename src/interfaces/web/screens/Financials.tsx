@@ -96,11 +96,11 @@ export default function Financials() {
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={mrrHistory} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-            <CartesianGrid stroke="#1e1e24" strokeDasharray="0" vertical={false} />
-            <XAxis dataKey="month" tick={{ fill: '#52525b', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#52525b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `R$${v}`} />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#1e1e24', strokeWidth: 1 }} />
-            <Line type="monotone" dataKey="mrr" stroke="#10b981" strokeWidth={2} dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }} activeDot={{ r: 5, fill: '#10b981', strokeWidth: 0 }} />
+            <CartesianGrid stroke="var(--tipsfy-border)" strokeDasharray="0" vertical={false} />
+            <XAxis dataKey="month" tick={{ fill: 'var(--tipsfy-gray)', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: 'var(--tipsfy-gray)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `R$${v}`} />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--tipsfy-border)', strokeWidth: 1 }} />
+            <Line type="monotone" dataKey="mrr" stroke="var(--tipsfy-green)" strokeWidth={2} dot={{ fill: 'var(--tipsfy-green)', r: 4, strokeWidth: 0 }} activeDot={{ r: 5, fill: 'var(--tipsfy-green)', strokeWidth: 0 }} />
           </LineChart>
         </ResponsiveContainer>
       </Card>

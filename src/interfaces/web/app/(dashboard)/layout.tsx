@@ -5,11 +5,10 @@ import * as React from "react"
 import Link from "next/link"
 
 import { usePathname } from "next/navigation"
+import BrandLogo from "../../components/BrandLogo"
 
 import {
-  Circle,
   Globe,
-  Hexagon,
   LayoutDashboard,
   Menu,
   Package,
@@ -40,15 +39,6 @@ const NAV = [
     proOnly: true,
   },
 ]
-
-function Logo() {
-  return (
-    <div className="relative w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm shadow-emerald-500/30 text-white">
-      <Hexagon size={16} strokeWidth={1.5} />
-      <Circle size={4} fill="currentColor" className="absolute" />
-    </div>
-  )
-}
 
 function SidebarNav({
   onNavigate,
@@ -95,22 +85,25 @@ function SidebarNav({
 export default function DashboardLayout({
   children,
   isPro,
-}: Readonly<{ children: React.ReactNode; isPro: boolean }>) {
-  return <DashboardShell isPro={isPro}>{children}</DashboardShell>
+  profilePhotoUrl,
+  tipsterName,
+}: Readonly<{ children: React.ReactNode; isPro: boolean; profilePhotoUrl?: string | null; tipsterName?: string }>) {
+  return <DashboardShell isPro={isPro} profilePhotoUrl={profilePhotoUrl} tipsterName={tipsterName}>{children}</DashboardShell>
 }
 
 function DashboardShell({
   children,
   isPro,
-}: Readonly<{ children: React.ReactNode; isPro: boolean }>) {
+  profilePhotoUrl,
+  tipsterName,
+}: Readonly<{ children: React.ReactNode; isPro: boolean; profilePhotoUrl?: string | null; tipsterName?: string }>) {
   const [mobileNav, setMobileNav] = React.useState(false)
 
   return (
     <div className="min-h-screen bg-[#08080a] flex">
       <aside className="hidden lg:flex flex-col w-60 border-r border-[#1e1e24] bg-[#0c0c0f] fixed h-full z-30">
         <div className="px-5 h-14 border-b border-[#1e1e24] flex items-center gap-2.5">
-          <Logo />
-          <span className="font-bold text-zinc-100">Tipsfy</span>
+          <BrandLogo className="h-8 w-24 flex-shrink-0 text-zinc-100" />
           <span className="ml-auto text-xs text-zinc-700 bg-zinc-900 border border-[#1e1e24] px-1.5 py-0.5 rounded font-mono">
             β
           </span>
@@ -124,12 +117,16 @@ function DashboardShell({
         <div className="px-3 py-4 border-t border-[#1e1e24]">
           <div className="px-3 py-2.5 rounded-xl bg-zinc-900/50 border border-[#1e1e24]">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold text-white">
-                R
-              </div>
+              {profilePhotoUrl ? (
+                <img src={profilePhotoUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold text-white">
+                  {tipsterName?.trim().charAt(0).toUpperCase() || "R"}
+                </div>
+              )}
               <div>
                 <p className="text-xs font-semibold text-zinc-200">
-                  Rafael Tipster
+                  {tipsterName || "Rafael Tipster"}
                 </p>
                 <p className="text-xs text-zinc-600 font-mono">
                   @SinaisFutebolVIP
@@ -140,10 +137,7 @@ function DashboardShell({
         </div>
       </aside>
       <header className="lg:hidden fixed top-0 inset-x-0 z-40 bg-[#0c0c0f]/95 backdrop-blur border-b border-[#1e1e24] h-12 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <Logo />
-          <span className="text-sm font-bold text-zinc-100">Tipsfy</span>
-        </div>
+        <BrandLogo className="h-6 w-[72px] flex-shrink-0 text-zinc-100" />
         <button
           onClick={() => setMobileNav(true)}
           className="text-zinc-400 p-1.5 rounded-lg hover:bg-zinc-800/60"

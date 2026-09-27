@@ -54,6 +54,7 @@ model Tipster {
   name                   String    @default("")
   bio                    String    @default("")
   website                String    @default("")
+  profilePhotoUrl        String?
   notificationPreferences Json      @default("{\"newSubscriber\":true,\"payment\":true,\"delinquent\":true,\"tips\":false,\"weekly\":true}")
   bankDetails            Json?
   deletedAt              DateTime?

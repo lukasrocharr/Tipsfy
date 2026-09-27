@@ -53,6 +53,7 @@ function createContext(
     document?: PageDocument | null
     tips?: Tip[]
     plans?: Plan[]
+    profilePhotoUrl?: string | null
   } = {},
 ) {
   const channel = new Channel(
@@ -69,6 +70,14 @@ function createContext(
     "private-password-hash",
     options.planTier ?? "PRO",
     new Date(),
+    "Rafael Tipster",
+    "",
+    "",
+    undefined,
+    null,
+    null,
+    null,
+    options.profilePhotoUrl ?? null,
   )
   const tipRepository = {
     tips: options.tips ?? [createTip("tip-1", "green")],
@@ -93,6 +102,14 @@ function createContext(
 }
 
 describe("ObterPerformancePublicaUseCase", () => {
+  it("returns the tipster profile photo for the public hero", async () => {
+    const { useCase } = createContext({ profilePhotoUrl: "https://blob.example/avatar.webp" })
+
+    const result = await useCase.execute({ publicSlug: "canal-premium" })
+
+    expect(result.tipsterAvatarUrl).toBe("https://blob.example/avatar.webp")
+  })
+
   it("retorna estado vazio quando ainda não há documento de página", async () => {
     const { useCase } = createContext({ document: null })
 

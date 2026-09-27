@@ -1,7 +1,7 @@
 import type { BlockOfType } from "./types"
 import { blockStyleToCss } from "./blockStyle"
 
-export default function HeroBlock({ block }: { block: BlockOfType<"HERO"> }) {
+export default function HeroBlock({ block, tipsterAvatarUrl }: { block: BlockOfType<"HERO">; tipsterAvatarUrl?: string | null }) {
   const { title, subtitle, bannerUrl, avatarUrl } = block.content
   const hasBanner =
     bannerUrl.trim().length > 0 &&
@@ -9,6 +9,7 @@ export default function HeroBlock({ block }: { block: BlockOfType<"HERO"> }) {
   const hasAvatar =
     avatarUrl.trim().length > 0 &&
     !avatarUrl.toLowerCase().includes("placeholder")
+  const publicAvatarUrl = hasAvatar ? avatarUrl : tipsterAvatarUrl
   const initials = title
     .trim()
     .split(/\s+/)
@@ -58,9 +59,9 @@ export default function HeroBlock({ block }: { block: BlockOfType<"HERO"> }) {
             </p>
           )}
         </div>
-        {hasAvatar ? (
+        {publicAvatarUrl ? (
           <img
-            src={avatarUrl}
+            src={publicAvatarUrl}
             alt={title}
             loading="eager"
             className="h-20 w-20 shrink-0 rounded-full border-2 border-white/70 object-cover @sm:h-24 @sm:w-24"

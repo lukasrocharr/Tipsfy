@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1030" height="350" viewBox="0 0 1030 350">
+<defs>
+  <linearGradient id="g" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0%" stop-color="#00C853"/>
+    <stop offset="100%" stop-color="#00E676"/>
+  </linearGradient>
+</defs>
+
+
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<g font-family="Arial, sans-serif" font-size="24">
+<rect x="50" y="60" width="180" height="180" rx="24" fill="#00E676"/><text x="50" y="285" fill="#0B0F14">Primary · #00E676</text>
+<rect x="300" y="60" width="180" height="180" rx="24" fill="#00C853"/><text x="300" y="285" fill="#0B0F14">Deep Green · #00C853</text>
+<rect x="550" y="60" width="180" height="180" rx="24" fill="#0B0F14"/><text x="550" y="285" fill="#0B0F14">Ink · #0B0F14</text>
+<rect x="800" y="60" width="180" height="180" rx="24" fill="#FFFFFF" stroke="#D1D5DB"/><text x="800" y="285" fill="#0B0F14">White · #FFFFFF</text>
+</g>
+</svg>

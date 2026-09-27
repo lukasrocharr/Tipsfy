@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Btn, Input } from '../../interfaces/web/components/ui'
+import BrandLogo from '../../interfaces/web/components/BrandLogo'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -28,7 +29,7 @@ export default function LoginPage() {
 
   return <main className="min-h-screen bg-[#08080a] flex items-center justify-center px-4">
     <div className="w-full max-w-[440px] bg-[#111114] border border-[#1e1e24] rounded-2xl p-8">
-      <div className="mb-6"><h1 className="text-xl font-bold text-zinc-100">Entrar no Tipsfy</h1><p className="text-sm text-zinc-500 mt-1">Acesse sua área de gestão.</p></div>
+      <div className="mb-6"><BrandLogo className="mb-5 h-10 w-[120px] text-zinc-100" /><h1 className="text-xl font-bold text-zinc-100">Entrar</h1><p className="text-sm text-zinc-500 mt-1">Acesse sua área de gestão.</p></div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input label="E-mail" type="email" value={email} onChange={event => setEmail(event.target.value)} required />
         <Input label="Senha" type="password" value={senha} onChange={event => setSenha(event.target.value)} required />
