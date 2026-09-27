@@ -19,6 +19,8 @@ import {
 import { GripVertical, Monitor, Smartphone } from "lucide-react"
 import PageRenderer from "../PageRenderer"
 import type { PageBlock } from "../../../../domain/entities/PageBlock"
+import type { PublicPlan } from "../../../../application/use-cases/channels/ObterPerformancePublicaUseCase"
+import type { PublicPageBlock } from "../../../../application/use-cases/channels/ObterPerformancePublicaUseCase"
 import { PAGE_BLOCK_OPTIONS } from "./types"
 
 export type PreviewWidth = 375 | 1440
@@ -27,11 +29,13 @@ function SortableBlock({
   block,
   selected,
   scale,
+  plans,
   onSelect,
 }: {
   block: PageBlock
   selected: boolean
   scale: number
+  plans: PublicPlan[]
   onSelect: () => void
 }) {
   const {
@@ -49,6 +53,9 @@ function SortableBlock({
   const label =
     PAGE_BLOCK_OPTIONS.find((option) => option.type === block.type)?.label ??
     block.type
+  const previewBlock = block.type === "PLANS"
+    ? { ...block, content: plans } as Extract<PublicPageBlock, { type: "PLANS" }>
+    : block
 
   return (
     <article
@@ -90,7 +97,7 @@ function SortableBlock({
         inert
         className="pointer-events-none min-w-0 select-none"
       >
-        <PageRenderer blocks={[block]} />
+        <PageRenderer blocks={[previewBlock]} />
       </div>
     </article>
   )
@@ -98,6 +105,7 @@ function SortableBlock({
 
 export default function PageBuilderCanvas({
   blocks,
+  plans,
   selectedBlockId,
   previewWidth,
   onPreviewWidthChange,
@@ -105,6 +113,7 @@ export default function PageBuilderCanvas({
   onReorder,
 }: {
   blocks: PageBlock[]
+  plans: PublicPlan[]
   selectedBlockId: string | null
   previewWidth: PreviewWidth
   onPreviewWidthChange: (width: PreviewWidth) => void
@@ -229,6 +238,7 @@ export default function PageBuilderCanvas({
                       <SortableBlock
                         key={block.id}
                         block={block}
+                        plans={plans}
                         selected={block.id === selectedBlockId}
                         scale={scale}
                         onSelect={() => onSelectBlock(block.id)}

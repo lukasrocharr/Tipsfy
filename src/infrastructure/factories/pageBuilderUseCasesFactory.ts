@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client"
 import { AtualizarDocumentoDaPaginaUseCase } from "../../application/use-cases/page-builder/AtualizarDocumentoDaPaginaUseCase"
 import { CriarPaginaAPartirDeTemplateUseCase } from "../../application/use-cases/page-builder/CriarPaginaAPartirDeTemplateUseCase"
 import { ListarTemplatesDisponiveisUseCase } from "../../application/use-cases/page-builder/ListarTemplatesDisponiveisUseCase"
@@ -5,12 +6,15 @@ import { ObterDocumentoDaPaginaParaEdicaoUseCase } from "../../application/use-c
 import { PrismaChannelRepository } from "../database/PrismaChannelRepository"
 import { PrismaPageDocumentRepository } from "../database/PrismaPageDocumentRepository"
 import { PrismaTipsterRepository } from "../database/PrismaTipsterRepository"
+import { prisma } from "../database/prisma"
 import { StaticPageTemplateCatalog } from "../page-builder/templates"
 
-export function pageBuilderUseCasesFactory() {
-  const pageDocumentRepository = new PrismaPageDocumentRepository()
-  const channelRepository = new PrismaChannelRepository()
-  const tipsterRepository = new PrismaTipsterRepository()
+export function pageBuilderUseCasesFactory(
+  database: Prisma.TransactionClient = prisma,
+) {
+  const pageDocumentRepository = new PrismaPageDocumentRepository(database)
+  const channelRepository = new PrismaChannelRepository(database)
+  const tipsterRepository = new PrismaTipsterRepository(database)
   const templateCatalog = new StaticPageTemplateCatalog()
 
   return {

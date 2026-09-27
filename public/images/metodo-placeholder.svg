@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Campo esportivo ilustrado">
+  <rect width="1200" height="675" fill="#e8efec" />
+  <rect x="96" y="72" width="1008" height="531" rx="20" fill="#1e5b49" />
+  <path d="M600 72v531M96 338h1008" fill="none" stroke="#d6e8df" stroke-width="6" opacity=".8" />
+  <circle cx="600" cy="338" r="108" fill="none" stroke="#d6e8df" stroke-width="6" opacity=".8" />
+  <rect x="96" y="206" width="142" height="265" fill="none" stroke="#d6e8df" stroke-width="6" opacity=".8" />
+  <rect x="962" y="206" width="142" height="265" fill="none" stroke="#d6e8df" stroke-width="6" opacity=".8" />
+  <path d="m426 403 93-91 72 55 115-132 68 59" fill="none" stroke="#8ce0bf" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" />
+  <circle cx="426" cy="403" r="12" fill="#f7fbf9" />
+  <circle cx="519" cy="312" r="12" fill="#f7fbf9" />
+  <circle cx="591" cy="367" r="12" fill="#f7fbf9" />
+  <circle cx="706" cy="235" r="12" fill="#f7fbf9" />
+  <circle cx="774" cy="294" r="12" fill="#f7fbf9" />
+</svg>

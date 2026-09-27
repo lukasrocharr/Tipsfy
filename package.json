@@ -5,15 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
     "test": "vitest run",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "backfill:channel-public-slugs": "prisma db seed"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@prisma/client": "^6.16.2",
+    "@vercel/blob": "^2.8.0",
     "bcryptjs": "^3.0.2",
     "grammy": "^1.38.4",
     "lucide-react": "^1.48.0",
@@ -36,5 +38,8 @@
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
     "vitest": "^3.2.4"
+  },
+  "prisma": {
+    "seed": "node scripts/backfill-channel-public-slugs.mjs"
   }
 }

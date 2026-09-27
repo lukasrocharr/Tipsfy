@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
 import { ArrowUpRight, Check, Save } from "lucide-react"
 import type {
   PageBlock,
@@ -19,6 +20,8 @@ import type {
   EditorChannel,
   TemplateCard,
 } from "../components/page-builder/types"
+import type { PublicPlan } from "../../../application/use-cases/channels/ObterPerformancePublicaUseCase"
+import type { Plan as ChannelPlan } from "../data"
 import UpgradePrompt from "../components/page-builder/UpgradePrompt"
 
 type TemplateResponse = {
@@ -38,10 +41,17 @@ async function readError(
   return body?.message ?? fallback
 }
 
-export default function PageBuilderEditor() {
+export default function PageBuilderEditor({
+  initialChannelId = "",
+}: {
+  initialChannelId?: string
+}) {
+  const router = useRouter()
+  const pathname = usePathname()
   const [channels, setChannels] = useState<EditorChannel[]>([])
   const [channelId, setChannelId] = useState("")
   const [document, setDocument] = useState<EditablePageDocument | null>(null)
+  const [previewPlans, setPreviewPlans] = useState<PublicPlan[]>([])
   const [templates, setTemplates] = useState<TemplateCard[]>([])
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>(375)
@@ -68,9 +78,12 @@ export default function PageBuilderEditor() {
         if (!active) return
         setChannels(body.channels)
         setChannelId((current) =>
-          current && body.channels.some((channel) => channel.id === current)
-            ? current
-            : (body.channels[0]?.id ?? ""),
+          initialChannelId &&
+            body.channels.some((channel) => channel.id === initialChannelId)
+            ? initialChannelId
+            : current && body.channels.some((channel) => channel.id === current)
+              ? current
+              : (body.channels[0]?.id ?? ""),
         )
       } catch (loadError) {
         if (active)
@@ -86,7 +99,37 @@ export default function PageBuilderEditor() {
     return () => {
       active = false
     }
-  }, [])
+  }, [initialChannelId])
+
+  useEffect(() => {
+    let active = true
+    setPreviewPlans([])
+    if (!channelId) return () => { active = false }
+
+    void fetch(`/api/channels/${encodeURIComponent(channelId)}/plans`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Não foi possível carregar os planos.")
+        const body = (await response.json()) as { plans: ChannelPlan[] }
+        if (!active) return
+        setPreviewPlans(
+          body.plans
+            .filter((plan) => plan.active)
+            .map((plan) => ({
+              id: plan.id,
+              name: plan.name,
+              price: plan.price,
+              period: plan.period,
+              checkoutSlug: plan.checkoutSlug,
+              description: plan.description ?? null,
+            })),
+        )
+      })
+      .catch(() => {
+        if (active) setPreviewPlans([])
+      })
+
+    return () => { active = false }
+  }, [channelId])
 
   useEffect(() => {
     if (!channelId) {
@@ -186,7 +229,9 @@ export default function PageBuilderEditor() {
       return
     setDirty(false)
     setSaved(false)
-    setChannelId(nextChannelId)
+    router.replace(`${pathname}?channelId=${encodeURIComponent(nextChannelId)}`, {
+      scroll: false,
+    })
   }
 
   function markEdited() {
@@ -406,7 +451,7 @@ export default function PageBuilderEditor() {
           </button>
           {currentChannel?.publicSlug ? (
             <a
-              href={`/p/${encodeURIComponent(currentChannel.publicSlug)}`}
+              href={`/${encodeURIComponent(currentChannel.publicSlug)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[#303036] px-3 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-zinc-100"
@@ -442,21 +487,25 @@ export default function PageBuilderEditor() {
           Carregando documento…
         </div>
       ) : document ? (
-        <main className="grid min-w-0 flex-1 grid-cols-1 content-start gap-3 p-3 sm:p-4 xl:grid-cols-[13rem_minmax(0,1fr)_17rem] xl:items-start">
-          <BlockPalette onAdd={addBlock} />
+        <main className="flex min-w-0 flex-1 flex-col gap-3 p-3 sm:p-4">
+          <div className="grid min-w-0 grid-cols-1 content-start gap-3 xl:grid-cols-[13rem_minmax(0,1fr)] xl:items-start">
+            <BlockPalette onAdd={addBlock} />
+            <BlockPropertiesPanel
+              block={selectedBlock}
+              globalTheme={document.globalTheme}
+              channelId={channelId}
+              onChange={updateBlock}
+              onRemove={removeBlock}
+            />
+          </div>
           <PageBuilderCanvas
             blocks={document.blocks}
+            plans={previewPlans}
             selectedBlockId={selectedBlockId}
             previewWidth={previewWidth}
             onPreviewWidthChange={setPreviewWidth}
             onSelectBlock={setSelectedBlockId}
             onReorder={reorderBlocks}
-          />
-          <BlockPropertiesPanel
-            block={selectedBlock}
-            globalTheme={document.globalTheme}
-            onChange={updateBlock}
-            onRemove={removeBlock}
           />
         </main>
       ) : (

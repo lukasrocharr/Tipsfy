@@ -163,6 +163,31 @@ describe("CriarPaginaAPartirDeTemplateUseCase", () => {
     )
   })
 
+  it("pré-preenche o título Hero e substitui os links sociais do template", async () => {
+    const context = createContext()
+
+    const pageDocument = await context.create.execute({
+      tipsterId: "tipster-1",
+      channelId: "channel-1",
+      templateId: "clube-essencial",
+      pageName: "Rafael Tips",
+      links: [
+        { platform: "Instagram", url: "https://instagram.com/rafaeltips" },
+        { platform: "WhatsApp", url: "https://wa.me/5511999999999" },
+      ],
+    })
+
+    const hero = pageDocument.blocks.find((block) => block.type === "HERO")
+    const socials = pageDocument.blocks.find(
+      (block) => block.type === "SOCIAL_LINKS",
+    )
+    expect(hero?.content.title).toBe("Rafael Tips")
+    expect(socials?.content.links).toEqual([
+      { platform: "Instagram", url: "https://instagram.com/rafaeltips" },
+      { platform: "WhatsApp", url: "https://wa.me/5511999999999" },
+    ])
+  })
+
   it("bloqueia Starter", async () => {
     const context = createContext({ planTier: "STARTER" })
 

@@ -18,6 +18,10 @@ class ChannelRepositoryFake implements ChannelRepository {
     return this.channels.find(channel => channel.id === id) ?? null
   }
 
+  async buscarPorPublicSlug(publicSlug: string): Promise<Channel | null> {
+    return this.channels.find(channel => channel.publicSlug === publicSlug) ?? null
+  }
+
   async listarPorTipsterId(tipsterId: string): Promise<Channel[]> {
     return this.channels.filter(channel => channel.tipsterId === tipsterId)
   }

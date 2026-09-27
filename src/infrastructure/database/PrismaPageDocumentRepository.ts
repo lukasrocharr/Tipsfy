@@ -8,8 +8,12 @@ import type { PageDocumentRepository } from "../../application/ports/PageDocumen
 import { prisma } from "./prisma"
 
 export class PrismaPageDocumentRepository implements PageDocumentRepository {
+  constructor(
+    private readonly database: Prisma.TransactionClient = prisma,
+  ) {}
+
   async obterPorCanal(channelId: string): Promise<PageDocument | null> {
-    const record = await prisma.pageDocument.findUnique({
+    const record = await this.database.pageDocument.findUnique({
       where: { channelId },
     })
     return record ? this.toDomain(record) : null
@@ -17,7 +21,7 @@ export class PrismaPageDocumentRepository implements PageDocumentRepository {
 
   async salvar(pageDocument: PageDocument): Promise<void> {
     const data = this.toPersistence(pageDocument)
-    await prisma.pageDocument.upsert({
+    await this.database.pageDocument.upsert({
       where: { channelId: pageDocument.channelId },
       create: data,
       update: {

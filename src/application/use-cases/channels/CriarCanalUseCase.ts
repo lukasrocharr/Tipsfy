@@ -5,6 +5,7 @@
 import { randomUUID } from 'node:crypto'
 import { Channel } from '../../../domain/entities/Channel'
 import { LimiteDeCanaisExcedidoError } from '../../../domain/errors/LimiteDeCanaisExcedidoError'
+import { generateUniquePublicChannelSlug } from '../../../domain/services/publicChannelSlug.mjs'
 import type { ChannelRepository } from '../../ports/ChannelRepository'
 import type { TipsterRepository } from '../../ports/TipsterRepository'
 
@@ -23,7 +24,19 @@ export class CriarCanalUseCase {
     if (tipster.planTier === 'STARTER' && channels.length >= 1) {
       throw new LimiteDeCanaisExcedidoError()
     }
-    const channel = new Channel(randomUUID(), input.tipsterId, input.telegramChatId, input.botTokenEnc, input.name)
+    const publicSlug = await generateUniquePublicChannelSlug(
+      input.name,
+      async (slug) => Boolean(await this.channelRepository.buscarPorPublicSlug(slug)),
+    )
+
+    const channel = new Channel(
+      randomUUID(),
+      input.tipsterId,
+      input.telegramChatId,
+      input.botTokenEnc,
+      input.name,
+      publicSlug,
+    )
     await this.channelRepository.salvar(channel)
     return channel
   }

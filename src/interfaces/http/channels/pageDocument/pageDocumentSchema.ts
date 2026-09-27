@@ -115,5 +115,16 @@ export const applyTemplateBodySchema = z
       "resultados-abertos",
       "cartao-do-tipster",
     ]),
+    pageName: z.string().max(120).refine((value) => value.trim().length > 0).optional(),
+    links: z
+      .array(
+        z
+          .object({
+            platform: z.string().trim().min(1).max(40),
+            url: z.string().trim().min(1).max(500),
+          })
+          .strict(),
+      )
+      .optional(),
   })
   .strict()

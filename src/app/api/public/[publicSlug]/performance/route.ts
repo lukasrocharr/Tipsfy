@@ -34,6 +34,7 @@ export async function GET(
 
     return NextResponse.json(result)
   } catch (error) {
+    console.error("Public performance lookup failed", error)
     if (
       error instanceof Error &&
       error.name === "RecursoNaoDisponivelNoPlanoError"

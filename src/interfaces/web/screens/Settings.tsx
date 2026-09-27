@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, Btn, Input, SectionHeader } from '../components/ui'
 import { useConnectBot } from '../hooks/useConnectBot'
 import { useSettings } from '../hooks/useSettings'
@@ -39,9 +39,11 @@ export default function Settings() {
   const [notif, setNotif] = useState({ newSubscriber: true, payment: true, delinquent: true, tips: false, weekly: true })
   const { connectBot, disconnectBot, connected, chatId, error: botError } = useConnectBot()
   const { saving, saved, setSaved, saveProfile, saveNotificationPreferences, saveBankDetails, deleteAccount } = useSettings()
+  const [publicChannels, setPublicChannels] = useState<Array<{ id: string; name: string; publicSlug: string | null }>>([])
+  const [publicChannelId, setPublicChannelId] = useState('')
+  const [publicOrigin, setPublicOrigin] = useState('')
   const [botToken, setBotToken] = useState('')
   const [publicPageEnabled, setPublicPageEnabled] = useState(false)
-  const [publicLink, setPublicLink] = useState('https://tipsfy.app/p/rafael-tipster')
   const [botActionLoading, setBotActionLoading] = useState(false)
   const [bankDetails, setBankDetails] = useState({
     pixType: 'CPF',
@@ -100,6 +102,30 @@ export default function Settings() {
     { id: 'danger', label: 'Conta', icon: '⚙️' },
   ] as const
 
+  useEffect(() => {
+    let active = true
+    setPublicOrigin(window.location.origin)
+    void fetch('/api/channels')
+      .then(async response => {
+        if (!response.ok) return
+        const body = await response.json() as { channels: typeof publicChannels }
+        if (!active) return
+        setPublicChannels(body.channels)
+        setPublicChannelId(current =>
+          current && body.channels.some(channel => channel.id === current)
+            ? current
+            : (body.channels[0]?.id ?? ''),
+        )
+      })
+      .catch(() => {})
+    return () => { active = false }
+  }, [])
+
+  const selectedPublicChannel = publicChannels.find(channel => channel.id === publicChannelId)
+  const publicLink = selectedPublicChannel?.publicSlug && publicOrigin
+    ? `${publicOrigin}/${encodeURIComponent(selectedPublicChannel.publicSlug)}`
+    : ''
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 lg:px-6">
       <SectionHeader title="Configurações" sub="Gerencie sua conta, integrações e preferências." />
@@ -149,10 +175,23 @@ export default function Settings() {
                     </div>
 
                     <div className="mt-4 flex items-center gap-2">
-                      <input readOnly value={publicLink} className="flex-1 bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-xs text-zinc-300 font-mono outline-none" />
+                      {publicChannels.length > 1 && (
+                        <select
+                          aria-label="Canal da página pública"
+                          value={publicChannelId}
+                          onChange={event => setPublicChannelId(event.target.value)}
+                          className="max-w-40 bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-xs text-zinc-300 outline-none"
+                        >
+                          {publicChannels.map(channel => (
+                            <option key={channel.id} value={channel.id}>{channel.name}</option>
+                          ))}
+                        </select>
+                      )}
+                      <input readOnly value={publicLink} placeholder="Canal sem slug público" className="min-w-0 flex-1 bg-[#18181c] border border-[#1e1e24] rounded-lg px-3 py-2.5 text-xs text-zinc-300 font-mono outline-none" />
                       <button
                         type="button"
                         onClick={() => navigator.clipboard?.writeText(publicLink)}
+                        disabled={!publicLink}
                         className="px-3 py-2.5 text-xs bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-300 rounded-lg transition-colors"
                       >
                         Copiar

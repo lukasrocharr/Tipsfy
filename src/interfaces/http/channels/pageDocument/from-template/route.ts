@@ -28,30 +28,6 @@ export async function POST(
     })
   }
 
-  if (tipsterId === "tipster-pro-demo" && id === "channel-demo-pro") {
-    const parsedBody = applyTemplateBodySchema.safeParse(
-      await request.json().catch(() => null),
-    )
-    if (!parsedBody.success) {
-      return NextResponse.json({ message: "Template inválido." }, { status: 400 })
-    }
-
-    const template = PAGE_BUILDER_TEMPLATES[parsedBody.data.templateId]
-    if (!template) {
-      return NextResponse.json({ message: "Template inválido." }, { status: 400 })
-    }
-
-    const pageDocument = new PageDocument({
-      channelId: id,
-      templateId: template.templateId,
-      blocks: structuredClone(template.blocks),
-      globalTheme: { ...template.globalTheme },
-      updatedAt: new Date(),
-    })
-
-    return NextResponse.json({ pageDocument }, { status: 201 })
-  }
-
   const parsedBody = applyTemplateBodySchema.safeParse(
     await request.json().catch(() => null),
   )
@@ -65,6 +41,8 @@ export async function POST(
         tipsterId,
         channelId: id,
         templateId: parsedBody.data.templateId,
+        pageName: parsedBody.data.pageName,
+        links: parsedBody.data.links,
       },
     )
     return NextResponse.json({ pageDocument }, { status: 201 })

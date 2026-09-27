@@ -10,6 +10,7 @@ import type {
   PageBlock,
   PageBlockStyle,
 } from "../../../../domain/entities/PageBlock"
+import ImageUploadField from "./ImageUploadField"
 
 const FIELD_CLASS =
   "mt-1 w-full min-w-0 rounded-lg border border-[#27272a] bg-[#111114] px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-700/40"
@@ -61,11 +62,13 @@ function fontForBlock(
 export default function BlockPropertiesPanel({
   block,
   globalTheme,
+  channelId,
   onChange,
   onRemove,
 }: {
   block: PageBlock | null
   globalTheme: GlobalTheme | null
+  channelId: string
   onChange: (block: PageBlock, theme?: GlobalTheme) => void
   onRemove: (blockId: string) => void
 }) {
@@ -177,24 +180,20 @@ export default function BlockPropertiesPanel({
                   onChange={(event) => setText("subtitle", event.target.value)}
                 />
               </Field>
-              <Field label="URL do banner">
-                <input
-                  className={FIELD_CLASS}
-                  type="url"
-                  value={block.content.bannerUrl}
-                  placeholder="https://…"
-                  onChange={(event) => setText("bannerUrl", event.target.value)}
-                />
-              </Field>
-              <Field label="URL do avatar">
-                <input
-                  className={FIELD_CLASS}
-                  type="url"
-                  value={block.content.avatarUrl}
-                  placeholder="https://…"
-                  onChange={(event) => setText("avatarUrl", event.target.value)}
-                />
-              </Field>
+              <ImageUploadField
+                channelId={channelId}
+                assetType="hero-banner"
+                label="Banner"
+                value={block.content.bannerUrl}
+                onChange={(value) => setText("bannerUrl", value)}
+              />
+              <ImageUploadField
+                channelId={channelId}
+                assetType="hero-avatar"
+                label="Avatar"
+                value={block.content.avatarUrl}
+                onChange={(value) => setText("avatarUrl", value)}
+              />
             </>
           )}
 
@@ -234,15 +233,13 @@ export default function BlockPropertiesPanel({
 
           {block.type === "IMAGE" && (
             <>
-              <Field label="URL da imagem">
-                <input
-                  className={FIELD_CLASS}
-                  type="url"
-                  value={block.content.url}
-                  placeholder="https://…"
-                  onChange={(event) => setText("url", event.target.value)}
-                />
-              </Field>
+              <ImageUploadField
+                channelId={channelId}
+                assetType="block-image"
+                label="Imagem"
+                value={block.content.url}
+                onChange={(value) => setText("url", value)}
+              />
               <Field label="Legenda">
                 <input
                   className={FIELD_CLASS}

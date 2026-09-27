@@ -4,53 +4,43 @@ import { useEffect, useState } from 'react'
 import type { Plan, PlanPeriod } from '../data'
 
 type PlanInput = { name: string; price: number; period: PlanPeriod; active: boolean; description?: string }
-type Channel = { id: string; tipsterId: string; telegramChatId: string; name: string }
-
-export function usePlans() {
+export function usePlans(channelId: string | null) {
   const [plans, setPlans] = useState<Plan[]>([])
-  const [channelId, setChannelId] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    void loadPlans()
-  }, [])
-
-  async function loadPlans() {
-    try {
-      const response = await fetch('/api/channels')
-      if (!response.ok) throw new Error('Não foi possível carregar os canais.')
-      const body = await response.json() as { channels: Channel[] }
-      const channel = body.channels[0]
-      if (!channel) return
-      setChannelId(channel.id)
-      const plansResponse = await fetch(`/api/channels/${channel.id}/plans`)
-      if (!plansResponse.ok) throw new Error('Não foi possível carregar os planos.')
-      const plansBody = await plansResponse.json() as { plans: Plan[] }
-      setPlans(plansBody.plans)
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os planos.')
+    let active = true
+    if (!channelId) {
+      setPlans([])
+      return () => { active = false }
     }
-  }
 
-  async function ensureChannel(): Promise<string> {
-    if (channelId) return channelId
-    const response = await fetch('/api/channels', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      // O vínculo real do Telegram continua mockado até a Etapa 4.
-      body: JSON.stringify({ telegramChatId: 'pending', botTokenEnc: null, name: 'Canal principal' }),
-    })
-    if (!response.ok) throw new Error('Não foi possível preparar o canal.')
-    const body = await response.json() as { channel: Channel }
-    setChannelId(body.channel.id)
-    return body.channel.id
-  }
+    setPlans([])
+    setError('')
+    void (async () => {
+      try {
+        const response = await fetch(`/api/channels/${encodeURIComponent(channelId)}/plans`)
+        if (!response.ok) throw new Error('Não foi possível carregar os planos.')
+        const body = await response.json() as { plans: Plan[] }
+        if (active) setPlans(body.plans)
+      } catch (loadError) {
+        if (active) {
+          setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os planos.')
+        }
+      }
+    })()
+
+    return () => { active = false }
+  }, [channelId])
 
   async function criarPlano(input: PlanInput) {
+    if (!channelId) {
+      setError('Selecione um canal antes de criar o plano.')
+      return
+    }
     try {
       setError('')
-      const id = await ensureChannel()
-      const response = await fetch(`/api/channels/${id}/plans`, {
+      const response = await fetch(`/api/channels/${encodeURIComponent(channelId)}/plans`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
@@ -92,5 +82,5 @@ export function usePlans() {
     }
   }
 
-  return { plans, criarPlano, editarPlano, removerPlano, error }
+  return { plans, channelId, criarPlano, editarPlano, removerPlano, error }
 }

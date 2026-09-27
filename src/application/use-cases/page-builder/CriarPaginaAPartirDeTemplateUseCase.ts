@@ -1,4 +1,5 @@
 import { PageDocument } from "../../../domain/entities/PageDocument"
+import type { SocialLink } from "../../../domain/entities/PageBlock"
 import { PaginaJaConfiguradaError } from "../../../domain/errors/PaginaJaConfiguradaError"
 import type { ChannelRepository } from "../../ports/ChannelRepository"
 import type {
@@ -13,6 +14,8 @@ export type CriarPaginaAPartirDeTemplateInput = {
   tipsterId: string
   channelId: string
   templateId: PageTemplateId
+  pageName?: string
+  links?: SocialLink[]
 }
 
 export class CriarPaginaAPartirDeTemplateUseCase {
@@ -46,10 +49,20 @@ export class CriarPaginaAPartirDeTemplateUseCase {
       throw new PaginaJaConfiguradaError()
     }
 
+    const blocks = structuredClone(template.blocks)
+    if (input.pageName !== undefined) {
+      const hero = blocks.find((block) => block.type === "HERO")
+      if (hero) hero.content.title = input.pageName
+    }
+    if (input.links !== undefined) {
+      const socialLinks = blocks.find((block) => block.type === "SOCIAL_LINKS")
+      if (socialLinks) socialLinks.content.links = structuredClone(input.links)
+    }
+
     const pageDocument = new PageDocument({
       ...template,
       channelId: input.channelId,
-      blocks: structuredClone(template.blocks),
+      blocks,
       globalTheme: { ...template.globalTheme },
       updatedAt: new Date(),
     })

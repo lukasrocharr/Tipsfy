@@ -3,19 +3,23 @@ import { EstiloInvalidoError } from "../../../../domain/errors/EstiloInvalidoErr
 import { PaginaJaConfiguradaError } from "../../../../domain/errors/PaginaJaConfiguradaError"
 import { RecursoNaoDisponivelNoPlanoError } from "../../../../domain/errors/RecursoNaoDisponivelNoPlanoError"
 import { PrismaChannelRepository } from "../../../../infrastructure/database/PrismaChannelRepository"
+import { PrismaTipsterRepository } from "../../../../infrastructure/database/PrismaTipsterRepository"
 
-const DEMO_TIPSTER_ID = "tipster-pro-demo"
+const DEMO_TEST_EMAIL = "pro@tipsfy.io"
 const DEMO_CHANNEL_ID = "channel-demo-pro"
 
-function isDemoPageBuilderAccess(id: string, tipsterId: string) {
-  return id === DEMO_CHANNEL_ID && tipsterId === DEMO_TIPSTER_ID
+async function isDemoPageBuilderAccess(id: string, tipsterId: string) {
+  if (id !== DEMO_CHANNEL_ID) return false
+
+  const tipster = await new PrismaTipsterRepository().buscarPorId(tipsterId)
+  return tipster?.email.trim().toLowerCase() === DEMO_TEST_EMAIL
 }
 
 export async function isOwnedChannel(
   id: string,
   tipsterId: string,
 ): Promise<boolean> {
-  if (isDemoPageBuilderAccess(id, tipsterId)) return true
+  if (await isDemoPageBuilderAccess(id, tipsterId)) return true
   const channel = await new PrismaChannelRepository().buscarPorId(id)
   return channel?.tipsterId === tipsterId
 }

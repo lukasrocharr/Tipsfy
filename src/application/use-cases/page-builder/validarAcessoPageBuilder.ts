@@ -2,7 +2,7 @@ import { RecursoNaoDisponivelNoPlanoError } from "../../../domain/errors/Recurso
 import type { ChannelRepository } from "../../ports/ChannelRepository"
 import type { TipsterRepository } from "../../ports/TipsterRepository"
 
-const DEMO_TIPSTER_ID = "tipster-pro-demo"
+const DEMO_TEST_EMAIL = "pro@tipsfy.io"
 const DEMO_CHANNEL_ID = "channel-demo-pro"
 
 export async function validarAcessoPageBuilder(
@@ -11,9 +11,13 @@ export async function validarAcessoPageBuilder(
   channelRepository: ChannelRepository,
   tipsterRepository: TipsterRepository,
 ): Promise<void> {
-  if (channelId === DEMO_CHANNEL_ID && tipsterId === DEMO_TIPSTER_ID) {
-    const tipster = await tipsterRepository.buscarPorId(tipsterId)
-    if (tipster && tipster.planTier === "PRO") return
+  const tipster = await tipsterRepository.buscarPorId(tipsterId)
+
+  if (
+    channelId === DEMO_CHANNEL_ID &&
+    tipster?.email.trim().toLowerCase() === DEMO_TEST_EMAIL
+  ) {
+    if (tipster.planTier === "PRO") return
   }
 
   const channel = await channelRepository.buscarPorId(channelId)
@@ -21,7 +25,6 @@ export async function validarAcessoPageBuilder(
     throw new Error("Canal não encontrado ou não pertence ao tipster.")
   }
 
-  const tipster = await tipsterRepository.buscarPorId(tipsterId)
   if (!tipster) throw new Error("Tipster não encontrado.")
 
   if (tipster.planTier === "STARTER") {

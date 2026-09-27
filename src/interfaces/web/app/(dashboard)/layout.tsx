@@ -33,7 +33,12 @@ const NAV = [
 
   { href: "/settings", label: "Configurações", icon: Settings },
 
-  { href: "/public-page-editor", label: "Editor da Página", icon: Globe },
+  {
+    href: "/public-page-editor",
+    label: "Página de Vendas",
+    icon: Globe,
+    proOnly: true,
+  },
 ]
 
 function Logo() {
@@ -45,12 +50,19 @@ function Logo() {
   )
 }
 
-function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarNav({
+  onNavigate,
+  isPro,
+}: {
+  onNavigate?: () => void
+  isPro: boolean
+}) {
   const pathname = usePathname()
+  const visibleItems = NAV.filter((item) => !item.proOnly || isPro)
 
   return (
     <nav className="space-y-0.5">
-      {NAV.map((item) => {
+      {visibleItems.map((item) => {
         const active = pathname === item.href
 
         const Icon = item.icon
@@ -82,11 +94,15 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
 export default function DashboardLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
-  return <DashboardShell>{children}</DashboardShell>
+  isPro,
+}: Readonly<{ children: React.ReactNode; isPro: boolean }>) {
+  return <DashboardShell isPro={isPro}>{children}</DashboardShell>
 }
 
-function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
+function DashboardShell({
+  children,
+  isPro,
+}: Readonly<{ children: React.ReactNode; isPro: boolean }>) {
   const [mobileNav, setMobileNav] = React.useState(false)
 
   return (
@@ -103,7 +119,7 @@ function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
           <p className="text-xs font-medium text-zinc-700 uppercase tracking-widest px-3 mb-2">
             Gestão
           </p>
-          <SidebarNav />
+          <SidebarNav isPro={isPro} />
         </div>
         <div className="px-3 py-4 border-t border-[#1e1e24]">
           <div className="px-3 py-2.5 rounded-xl bg-zinc-900/50 border border-[#1e1e24]">
@@ -157,7 +173,7 @@ function DashboardShell({ children }: Readonly<{ children: React.ReactNode }>) {
               </button>
             </div>
             <nav className="px-3 py-4">
-              <SidebarNav onNavigate={() => setMobileNav(false)} />
+              <SidebarNav isPro={isPro} onNavigate={() => setMobileNav(false)} />
             </nav>
           </div>
         </div>

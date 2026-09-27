@@ -4,9 +4,13 @@ import { RecursoNaoDisponivelNoPlanoError } from "../../../../../domain/errors/R
 import { PrismaTipsterRepository } from "../../../../../infrastructure/database/PrismaTipsterRepository"
 import { authOptions } from "../../../../../infrastructure/factories/authOptions"
 import UpgradePrompt from "../../../components/page-builder/UpgradePrompt"
-import PageBuilderEditor from "../../../screens/PageBuilderEditor"
+import SalesPageEntry from "../../../screens/SalesPageEntry"
 
-export default async function PublicPageEditorPage() {
+export default async function PublicPageEditorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ channelId?: string | string[] }>
+}) {
   const session = await getServerSession(authOptions)
   const tipsterId = session?.user?.id
   if (!tipsterId) redirect("/login")
@@ -22,5 +26,9 @@ export default async function PublicPageEditorPage() {
     )
   }
 
-  return <PageBuilderEditor />
+  const query = await searchParams
+  const initialChannelId =
+    typeof query.channelId === "string" ? query.channelId : ""
+
+  return <SalesPageEntry initialChannelId={initialChannelId} />
 }

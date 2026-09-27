@@ -4,8 +4,12 @@ import { Prisma } from '@prisma/client'
 import { prisma } from './prisma'
 
 export class PrismaTipsterRepository implements TipsterRepository {
+  constructor(
+    private readonly database: Prisma.TransactionClient = prisma,
+  ) {}
+
   async salvar(tipster: Tipster): Promise<void> {
-    await prisma.tipster.create({
+    await this.database.tipster.create({
       data: {
         id: tipster.id,
         email: tipster.email,
@@ -24,7 +28,7 @@ export class PrismaTipsterRepository implements TipsterRepository {
   }
 
   async atualizar(tipster: Tipster): Promise<void> {
-    await prisma.tipster.update({
+    await this.database.tipster.update({
       where: { id: tipster.id },
       data: {
         email: tipster.email,
@@ -43,17 +47,17 @@ export class PrismaTipsterRepository implements TipsterRepository {
   }
 
   async buscarPorEmail(email: string): Promise<Tipster | null> {
-    const record = await prisma.tipster.findUnique({ where: { email } })
+    const record = await this.database.tipster.findUnique({ where: { email } })
     return record ? this.toDomain(record) : null
   }
 
   async buscarPorId(id: string): Promise<Tipster | null> {
-    const record = await prisma.tipster.findUnique({ where: { id } })
+    const record = await this.database.tipster.findUnique({ where: { id } })
     return record ? this.toDomain(record) : null
   }
 
   async existeEmail(email: string): Promise<boolean> {
-    const count = await prisma.tipster.count({ where: { email } })
+    const count = await this.database.tipster.count({ where: { email } })
     return count > 0
   }
 

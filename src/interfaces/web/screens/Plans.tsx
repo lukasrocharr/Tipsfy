@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import type { Plan, PlanPeriod } from '../data'
 import { Card, Btn, Input, SectionHeader } from '../components/ui'
 import { usePlans } from '../hooks/usePlans'
@@ -9,6 +10,7 @@ import { Check, CircleCheck, Copy, Pencil, Trash2 } from 'lucide-react'
 const PERIOD_LABEL: Record<PlanPeriod, string> = { monthly: 'Mensal', quarterly: 'Trimestral', annual: 'Anual' }
 const PERIOD_BADGE: Record<PlanPeriod, string> = { monthly: '', quarterly: '16% off', annual: '33% off' }
 const PERIOD_SUB: Record<PlanPeriod, string> = { monthly: '/mês', quarterly: '/trimestre', annual: '/ano' }
+type PlanChannel = { id: string; name: string }
 
 function CheckoutPreview({ plan }: { plan: Partial<Plan> }) {
   const price = plan.price ?? 0
@@ -80,16 +82,58 @@ function CheckoutPreview({ plan }: { plan: Partial<Plan> }) {
   )
 }
 
-export default function Plans() {
-  // Antes: useState inicializado com plans de data.ts. Agora: usePlans busca e persiste pela API,
-  // mantendo o mesmo formato Plan para preservar o JSX aprovado da tela.
-  const { plans, criarPlano, editarPlano, removerPlano, error } = usePlans()
+export default function Plans({ initialChannelId = '' }: { initialChannelId?: string }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [channels, setChannels] = useState<PlanChannel[]>([])
+  const [selectedChannelId, setSelectedChannelId] = useState(initialChannelId)
+  // O catálogo é consultado para o canal selecionado; a query continua sendo a fonte persistente.
+  const { plans, criarPlano, editarPlano, removerPlano, error } = usePlans(selectedChannelId || null)
   const [form, setForm] = useState<Partial<Plan>>({ period: 'monthly', active: true })
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
 
+  useEffect(() => {
+    let active = true
+    void fetch('/api/channels')
+      .then(async response => {
+        if (!response.ok) throw new Error('Não foi possível carregar os canais.')
+        const body = await response.json() as { channels: PlanChannel[] }
+        if (!active) return
+        setChannels(body.channels)
+        const queryChannel = body.channels.find(channel => channel.id === initialChannelId)
+        if (queryChannel) {
+          setSelectedChannelId(queryChannel.id)
+        } else if (body.channels.length === 1) {
+          setSelectedChannelId(body.channels[0].id)
+          router.replace(`${pathname}?channelId=${encodeURIComponent(body.channels[0].id)}`, { scroll: false })
+        } else {
+          setSelectedChannelId('')
+        }
+      })
+      .catch(() => {
+        if (active) setChannels([])
+      })
+    return () => { active = false }
+  }, [initialChannelId, pathname, router])
+
+  function selectChannel(channelId: string) {
+    if (!channelId) return
+    setSelectedChannelId(channelId)
+    router.replace(`${pathname}?channelId=${encodeURIComponent(channelId)}`, { scroll: false })
+  }
+
+  function changeChannel(channelId: string) {
+    if (editingId) {
+      if (!window.confirm('Descartar as alterações do plano antes de trocar de canal?')) return
+      setEditingId(null)
+      setForm({ period: 'monthly', active: true })
+    }
+    selectChannel(channelId)
+  }
+
   async function save() {
-    if (!form.name || !form.price) return
+    if (!selectedChannelId || !form.name || !form.price) return
     const planInput = { name: form.name, price: form.price, period: form.period ?? 'monthly', active: form.active ?? true, description: form.description }
     if (editingId) {
       await editarPlano(editingId, planInput)
@@ -121,6 +165,21 @@ export default function Plans() {
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 lg:px-6">
       <SectionHeader title="Planos de Assinatura" sub="Configure os planos que seus assinantes poderão contratar." />
+
+      {channels.length > 1 && (
+        <label className="mb-6 flex max-w-md flex-col gap-2 text-sm font-medium text-zinc-300">
+          Canal dos planos
+          <select
+            aria-label="Canal dos planos"
+            value={selectedChannelId}
+            onChange={event => changeChannel(event.target.value)}
+            className="min-h-11 rounded-lg border border-[#303036] bg-[#111114] px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
+          >
+            <option value="" disabled>Selecione um canal</option>
+            {channels.map(channel => <option key={channel.id} value={channel.id}>{channel.name}</option>)}
+          </select>
+        </label>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left: form + list */}
@@ -154,7 +213,7 @@ export default function Plans() {
                     Cancelar
                   </Btn>
                 )}
-                <Btn className="flex-1" onClick={save} disabled={!form.name || !form.price}>
+                <Btn className="flex-1" onClick={save} disabled={!selectedChannelId || !form.name || !form.price}>
                   {editingId ? 'Salvar Alterações' : '+ Criar Plano'}
                 </Btn>
               </div>

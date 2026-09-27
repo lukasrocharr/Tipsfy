@@ -155,7 +155,7 @@ export const PAGE_BUILDER_TEMPLATES: Record<PageTemplateId, PageDocumentTemplate
           id: "22000000-0000-4000-8000-000000000004",
           type: "IMAGE",
           content: {
-            url: "/images/metodo-placeholder.jpg",
+            url: "/images/metodo-placeholder.svg",
             caption: "Como preparo uma análise.",
           },
           style: {

@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   tipsterId: null as string | null,
   channel: null as { tipsterId: string } | null,
   findChannel: vi.fn(),
+  findTipster: vi.fn(),
   listTemplates: vi.fn(),
   createPage: vi.fn(),
   getPage: vi.fn(),
@@ -26,6 +27,14 @@ vi.mock("../../../src/infrastructure/database/PrismaChannelRepository", () => ({
   PrismaChannelRepository: class {
     async buscarPorId(id: string) {
       return mocks.findChannel(id)
+    }
+  },
+}))
+
+vi.mock("../../../src/infrastructure/database/PrismaTipsterRepository", () => ({
+  PrismaTipsterRepository: class {
+    async buscarPorId(id: string) {
+      return mocks.findTipster(id)
     }
   },
 }))
@@ -97,6 +106,11 @@ describe("rotas do Page Builder", () => {
     mocks.tipsterId = "tipster-1"
     mocks.channel = { tipsterId: "tipster-1" }
     mocks.findChannel.mockImplementation(async () => mocks.channel)
+    mocks.findTipster.mockImplementation(async (id: string) =>
+      id === "tipster-1"
+        ? { email: "pro@tipsfy.io", planTier: "PRO" }
+        : null,
+    )
     mocks.listTemplates.mockReturnValue([{ templateId: "clube-essencial" }])
     mocks.createPage.mockResolvedValue({ channelId: "channel-1" })
     mocks.getPage.mockResolvedValue({ channelId: "channel-1" })
@@ -137,6 +151,33 @@ describe("rotas do Page Builder", () => {
       expect(mocks.updatePage).not.toHaveBeenCalled()
     },
   )
+
+  it("consulta o documento pelo Use Case para a conta demo", async () => {
+    mocks.tipsterId = "tipster-demo"
+    mocks.channel = null
+    mocks.findTipster.mockImplementation(async (id: string) =>
+      id === "tipster-demo"
+        ? { email: "pro@tipsfy.io", planTier: "PRO" }
+        : null,
+    )
+
+    mocks.getPage.mockResolvedValue({ channelId: "channel-demo-pro" })
+
+    const response = await getPageDocument(
+      new Request("http://localhost"),
+      { params: Promise.resolve({ id: "channel-demo-pro" }) },
+    )
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({
+      pageDocument: { channelId: "channel-demo-pro" },
+    })
+    expect(mocks.getPage).toHaveBeenCalledOnce()
+    expect(mocks.getPage).toHaveBeenCalledWith({
+      tipsterId: "tipster-demo",
+      channelId: "channel-demo-pro",
+    })
+  })
 
   it("retorna 400 para body inválido ao aplicar template", async () => {
     const response = await createFromTemplate(
