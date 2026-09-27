@@ -108,7 +108,7 @@ describe("rotas do Page Builder", () => {
     mocks.findChannel.mockImplementation(async () => mocks.channel)
     mocks.findTipster.mockImplementation(async (id: string) =>
       id === "tipster-1"
-        ? { email: "pro@tipsfy.io", planTier: "PRO" }
+        ? { email: "tipster-1@example.test", planTier: "PRO" }
         : null,
     )
     mocks.listTemplates.mockReturnValue([{ templateId: "clube-essencial" }])
@@ -152,7 +152,7 @@ describe("rotas do Page Builder", () => {
     },
   )
 
-  it("consulta o documento pelo Use Case para a conta demo", async () => {
+  it("não autoriza um canal inexistente pelo antigo e-mail demo", async () => {
     mocks.tipsterId = "tipster-demo"
     mocks.channel = null
     mocks.findTipster.mockImplementation(async (id: string) =>
@@ -161,22 +161,13 @@ describe("rotas do Page Builder", () => {
         : null,
     )
 
-    mocks.getPage.mockResolvedValue({ channelId: "channel-demo-pro" })
-
     const response = await getPageDocument(
       new Request("http://localhost"),
       { params: Promise.resolve({ id: "channel-demo-pro" }) },
     )
 
-    expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({
-      pageDocument: { channelId: "channel-demo-pro" },
-    })
-    expect(mocks.getPage).toHaveBeenCalledOnce()
-    expect(mocks.getPage).toHaveBeenCalledWith({
-      tipsterId: "tipster-demo",
-      channelId: "channel-demo-pro",
-    })
+    expect(response.status).toBe(404)
+    expect(mocks.getPage).not.toHaveBeenCalled()
   })
 
   it("retorna 400 para body inválido ao aplicar template", async () => {

@@ -4,10 +4,15 @@ import type { NextAuthOptions } from 'next-auth'
 import { PrismaTipsterRepository } from '../database/PrismaTipsterRepository'
 
 const repository = new PrismaTipsterRepository()
+const nextAuthSecret = process.env.NEXTAUTH_SECRET
+
+if (!nextAuthSecret) {
+  throw new Error("NEXTAUTH_SECRET must be configured before starting the application.")
+}
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
-  secret: process.env.NEXTAUTH_SECRET ?? 'dev-tipsfy-nextauth-secret-2026',
+  secret: nextAuthSecret,
   pages: { signIn: '/login' },
   providers: [
     CredentialsProvider({
