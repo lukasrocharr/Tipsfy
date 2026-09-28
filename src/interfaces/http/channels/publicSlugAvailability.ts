@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { generateUniquePublicChannelSlug, normalizePublicChannelSlug } from "../../../domain/services/publicChannelSlug.mjs"
+import {
+  generateUniquePublicChannelSlug,
+  isReservedPublicChannelSlug,
+  normalizePublicChannelSlug,
+} from "../../../domain/services/publicChannelSlug.mjs"
 import { PrismaChannelRepository } from "../../../infrastructure/database/PrismaChannelRepository"
 import { PrismaTipsterRepository } from "../../../infrastructure/database/PrismaTipsterRepository"
 import { getAuthenticatedTipsterId } from "../auth/session"
@@ -47,6 +51,20 @@ export async function GET(
 
   const publicSlug = normalizePublicChannelSlug(parsedQuery.data.slug)
   const channelRepository = new PrismaChannelRepository()
+
+  if (isReservedPublicChannelSlug(publicSlug)) {
+    const suggestion = await generateUniquePublicChannelSlug(
+      publicSlug,
+      async (candidate) => Boolean(await channelRepository.buscarPorPublicSlug(candidate)),
+    )
+
+    return NextResponse.json({
+      slug: publicSlug,
+      available: false,
+      suggestion,
+    })
+  }
+
   const currentOwner = await channelRepository.buscarPorPublicSlug(publicSlug)
   if (!currentOwner || currentOwner.id === channelId) {
     return NextResponse.json({ slug: publicSlug, available: true })

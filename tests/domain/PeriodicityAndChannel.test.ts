@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { Channel } from '../../src/domain/entities/Channel'
 import { Tipster } from '../../src/domain/entities/Tipster'
 import { LimiteDeCanaisExcedidoError } from '../../src/domain/errors/LimiteDeCanaisExcedidoError'
+import { generateUniquePublicChannelSlug, isReservedPublicChannelSlug } from '../../src/domain/services/publicChannelSlug.mjs'
 import { Periodicity } from '../../src/domain/value-objects/Periodicity'
 import { CriarCanalUseCase } from '../../src/application/use-cases/channels/CriarCanalUseCase'
 import type { ChannelRepository } from '../../src/application/ports/ChannelRepository'
@@ -45,6 +46,13 @@ describe('Periodicity', () => {
     ['annual', '2027-01-15T12:00:00.000Z'],
   ] as const)('calcula vencimento %s', (period, expected) => {
     expect(new Periodicity(period).proximaDataDeVencimento(baseDate)).toEqual(new Date(expected))
+  })
+})
+
+describe('publicChannelSlug', () => {
+  it.each(['termos', 'privacidade', 'precos', 'sobre', 'contato'])('reserva o slug %s', async (slug) => {
+    expect(isReservedPublicChannelSlug(slug)).toBe(true)
+    await expect(generateUniquePublicChannelSlug(slug, async () => false)).resolves.toBe(`${slug}-2`)
   })
 })
 

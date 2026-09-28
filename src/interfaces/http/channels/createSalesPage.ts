@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
-import { normalizePublicChannelSlug } from "../../../domain/services/publicChannelSlug.mjs"
+import { isReservedPublicChannelSlug, normalizePublicChannelSlug } from "../../../domain/services/publicChannelSlug.mjs"
 import { PrismaChannelRepository } from "../../../infrastructure/database/PrismaChannelRepository"
 import { pageBuilderUseCasesFactory } from "../../../infrastructure/factories/pageBuilderUseCasesFactory"
 import { prisma } from "../../../infrastructure/database/prisma"
@@ -53,6 +53,13 @@ export async function POST(
 
   const channelId = parsedParams.data.id
   const publicSlug = normalizePublicChannelSlug(parsedBody.data.publicSlug)
+
+  if (isReservedPublicChannelSlug(publicSlug)) {
+    return NextResponse.json(
+      { message: "Esse link não pode ser usado. Escolha outro slug." },
+      { status: 409 },
+    )
+  }
 
   try {
     const pageDocument = await prisma.$transaction(async (transaction) => {
