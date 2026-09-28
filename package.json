@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma migrate deploy && prisma generate && next build",
+    "build": "prisma generate && next build",
+    "db:migrate": "prisma migrate deploy",
     "start": "next start",
     "test": "vitest run",
     "format": "oxfmt",
