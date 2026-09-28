@@ -31,6 +31,10 @@
 }
 
 @media (max-width: 480px) {
+    .login-page {
+        background-position: 65% center;
+    }
+
     .login-page .container {
         width: 90%;
         max-width: 420px;
