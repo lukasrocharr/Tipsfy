@@ -28,3 +28,4 @@ skills-lock.json
 !.env.example
 
 .env*
+.vercel
