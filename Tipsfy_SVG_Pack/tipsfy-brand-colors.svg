@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="220" viewBox="0 0 900 220">
+<text x="40" y="35" font-family="Montserrat,Arial,sans-serif" font-size="24" font-weight="700">Tipsfy Brand Colors</text>
+<g font-family="Montserrat,Arial,sans-serif" font-size="16">
+<rect x="40" y="65" width="140" height="100" rx="12" fill="#00E676"/><text x="55" y="190">#00E676</text>
+<rect x="210" y="65" width="140" height="100" rx="12" fill="#0B0F14"/><text x="225" y="190">#0B0F14</text>
+<rect x="380" y="65" width="140" height="100" rx="12" fill="#1F2937"/><text x="395" y="190">#1F2937</text>
+<rect x="550" y="65" width="140" height="100" rx="12" fill="#6B7280"/><text x="565" y="190">#6B7280</text>
+<rect x="720" y="65" width="140" height="100" rx="12" fill="#F8FAFC" stroke="#CBD5E1"/><text x="735" y="190">#F8FAFC</text>
+</g></svg>
