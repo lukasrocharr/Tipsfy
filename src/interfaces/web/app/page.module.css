@@ -87,6 +87,19 @@
   color: var(--green);
 }
 
+.navLogin {
+  color: #dce3eb;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 6px;
+  transition: color 0.25s;
+  white-space: nowrap;
+}
+
+.navLogin:hover {
+  color: var(--green);
+}
+
 .btn {
   display: inline-flex;
   align-items: center;

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { Btn, Input } from '../components/ui'
 import { AuthRequestError, useAuth } from '../hooks/useAuth'
@@ -134,6 +135,11 @@ export default function Onboarding() {
                   Ao criar uma conta você concorda com os <span className="text-emerald-500 cursor-pointer">Termos de Uso</span>.
                 </p>
               </div>
+              <p className="text-xs text-zinc-600 text-center mt-5">
+                <Link href="/login" className="text-emerald-400 hover:text-emerald-300">
+                  Já tenho uma conta
+                </Link>
+              </p>
             </div>
           )}
 
