@@ -1,11 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Btn, Input } from '../../interfaces/web/components/ui'
-import BrandLogo from '../../interfaces/web/components/BrandLogo'
+import './login.css'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -14,29 +12,85 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
     setLoading(true)
-    const result = await signIn('credentials', { email, password: senha, redirect: false })
-    setLoading(false)
-    if (result?.error) {
-      setError('E-mail ou senha inválidos.')
-      return
+
+    let destination = '/dashboard'
+    const callbackUrl = new URLSearchParams(window.location.search).get('callbackUrl')
+    if (callbackUrl) {
+      try {
+        const callback = new URL(callbackUrl, window.location.origin)
+        if (callback.origin === window.location.origin) {
+          destination = `${callback.pathname}${callback.search}${callback.hash}`
+        }
+      } catch {
+        destination = '/dashboard'
+      }
     }
-    router.push('/dashboard')
+
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password: senha,
+        callbackUrl: destination,
+        redirect: false,
+      })
+      if (result?.error) {
+        setError('E-mail ou senha inválidos.')
+        return
+      }
+      router.push(destination)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  return <main className="min-h-screen bg-[#08080a] flex items-center justify-center px-4">
-    <div className="w-full max-w-[440px] bg-[#111114] border border-[#1e1e24] rounded-2xl p-8">
-      <div className="mb-6"><BrandLogo className="mb-5 h-10 w-[120px] text-zinc-100" /><h1 className="text-xl font-bold text-zinc-100">Entrar</h1><p className="text-sm text-zinc-500 mt-1">Acesse sua área de gestão.</p></div>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Input label="E-mail" type="email" value={email} onChange={event => setEmail(event.target.value)} required />
-        <Input label="Senha" type="password" value={senha} onChange={event => setSenha(event.target.value)} required />
-        {error && <p className="text-xs text-red-400" role="alert">{error}</p>}
-        <Btn className="w-full" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</Btn>
-      </form>
-      <p className="text-xs text-zinc-600 text-center mt-5">Ainda não tem conta? <Link href="/onboarding" className="text-emerald-400 hover:text-emerald-300">Criar conta</Link></p>
-    </div>
-  </main>
+  return (
+    <main className="login-page">
+      <div className="container">
+        <form onSubmit={handleSubmit}>
+          <h1>Login Tipsfy</h1>
+          <div className="input-box">
+            <input
+              placeholder="Usuário"
+              type="email"
+              value={email}
+              onChange={event => setEmail(event.target.value)}
+              required
+            />
+            <i className="bx bxs-user"></i>
+          </div>
+          <div className="input-box">
+            <input
+              placeholder="Senha"
+              type="password"
+              value={senha}
+              onChange={event => setSenha(event.target.value)}
+              required
+            />
+            <i className="bx bxs-lock-alt"></i>
+          </div>
+
+          <div className="remember-forgot">
+            <label>
+              <input type="checkbox" />
+              Lembrar senha
+            </label>
+            <a href="#">Esqueci a senha</a>
+          </div>
+
+          {error && <p role="alert">{error}</p>}
+          <button type="submit" className="login" disabled={loading}>
+            {loading ? 'Entrando...' : 'Login'}
+          </button>
+
+          <div className="register-link">
+            <p>Não tem uma conta? <a href="/onboarding">Cadastre-se</a></p>
+          </div>
+        </form>
+      </div>
+    </main>
+  )
 }
