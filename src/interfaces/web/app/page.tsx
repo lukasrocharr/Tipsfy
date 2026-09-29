@@ -40,12 +40,14 @@ export default async function LandingPage() {
           <Link href="#faq">FAQ</Link>
         </nav>
 
-        <Link className={styles.navLogin} href={loginHref}>
-          Entrar
-        </Link>
-        <Link className={`${styles.btn} ${styles.btnOutline} ${styles.navCta}`} href="/onboarding">
-          Começar grátis
-        </Link>
+        <div className={styles.navActions}>
+          <Link className={styles.navLogin} href={loginHref}>
+            Entrar
+          </Link>
+          <Link className={`${styles.btn} ${styles.btnOutline} ${styles.navCta}`} href="/onboarding">
+            Começar grátis
+          </Link>
+        </div>
         <button type="button" className={styles.menuBtn} aria-label="Abrir menu">
           ☰
         </button>

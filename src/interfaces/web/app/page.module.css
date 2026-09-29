@@ -87,6 +87,12 @@
   color: var(--green);
 }
 
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .navLogin {
   color: #dce3eb;
   font-size: 13px;
